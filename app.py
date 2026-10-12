@@ -24,63 +24,68 @@ check_files()
 def generate_ai_response(user_message):
   msg = user_message.lower()
 
-  # Mathe-Logik
-  if (
-      any(op in msg for op in ['+', '-', '*', '/'])
-      or 'was ist' in msg
-      or 'wieviel' in msg
-      or 'mathe' in msg
+  # Erweiterte Mathe- & Formel-Erkennung
+  if any(
+      w in msg
+      for w in [
+          'formel',
+          'wurzel',
+          'quadrat',
+          'rechnen',
+          'mathe',
+          'plus',
+          'minus',
+          'mal',
+          'geteilt',
+          'pythagoras',
+      ]
   ):
-    try:
-      clean_msg = (
-          msg.replace('was ist', '')
-          .replace('wieviel ist', '')
-          .replace('?', '')
-          .strip()
+    if 'wurzel' in msg or 'quadrat' in msg:
+      return (
+          '🧮 **Wurzel & Quadrat:** Das Ziehen der Quadratwurzel ($\sqrt{x}$)'
+          ' ist die Umkehroperation zum Quadrieren ($x^2$). Beispiel:'
+          ' $\sqrt{25} = 5$, weil $5 \cdot 5 = 25$!'
       )
-      if any(c.isdigit() for c in clean_msg):
-        result = eval(clean_msg)
-        return f'🧮 Mathe-Ergebnis: {clean_msg} = {result}!'
-    except:
-      pass
-    return (
-        '🧮 **Mathe-Hilfe:** Ich kann rechnen oder dir Formeln aus dem Lexikon'
-        ' erklären! Was brauchst du?'
-    )
+    elif 'pythagoras' in msg:
+      return (
+          '📐 **Satz des Pythagoras:** Gilt im rechtwinkligen Dreieck:'
+          ' $a^2 + b^2 = c^2$, wobei $c$ die Hypotenuse (längste Seite) ist!'
+      )
+    else:
+      return (
+          '🧮 **Mathe-Assistent:** Ich helfe dir bei Formeln, Prozentrechnung'
+          ' oder Gleichungen! Frag mich einfach nach einem bestimmten Thema.'
+      )
 
   # Grammatik & Deutsch
-  elif (
-      'satzglieder' in msg
-      or 'grammatik' in msg
-      or 'subjekt' in msg
-      or 'prädikat' in msg
+  elif any(
+      w in msg for w in ['satzglieder', 'grammatik', 'subjekt', 'prädikat', 'wort']
   ):
     return (
-        '📖 **Deutsch & Grammatik:**\n• **Subjekt** (Wer oder was?)\n•'
-        ' **Prädikat** (Was tut das Subjekt?)\n• **Objekt** (Wen/Was oder'
-        ' Wem?)\nNutze im Dashboard auch unser neues Schul-Lexikon!'
+        '📖 **Deutsch-Grammatik:**\n• **Subjekt:** Wer oder was? (Nominativ)\n•'
+        ' **Prädikat:** Was tut das Subjekt? (Verb)\n• **Objekte:** Wem?'
+        ' (Dativ) oder Wen/Was? (Akkusativ)'
     )
 
   # Zusammenfassungen
-  elif 'zusammenfassen' in msg or 'zusammenfassung' in msg or 'fass' in msg:
+  elif any(w in msg for w in ['zusammenfassen', 'zusammenfassung', 'fass', 'tl;dr']):
     return (
-        '📚 **Zusammenfassung:** Hier sind die Kernpunkte:\n1. Konzentriere dich'
-        ' auf das Wesentliche.\n2. Lerne mit den neuen Vokabel-Karteikarten!\n3.'
-        ' Halte deine Noten im Notenrechner im Blick. 🚀'
+        '📚 **Lern-Tipp:** Konzentriere dich auf die Kernbegriffe, nutze unsere'
+        ' Vokabel-Karteikarten und mach Pausen mit dem Pomodoro-Timer! 🚀'
     )
 
   # Begrüßung
-  elif any(w in msg for w in ['hallo', 'hi', 'hey', 'moin', 'servus']):
+  elif any(w in msg for w in ['hallo', 'hi', 'hey', 'moin', 'servus', 'guten']):
     return (
-        'Hey! 😊 Schön, dass du da bist. Schau dir unbedingt den neuen'
-        ' Notenrechner und den Vokabeltrainer an!'
+        'Hey! 😊 Schön, dass du da bist. Wie kann ich dir heute helfen? (Egal'
+        ' ob Schule, Beziehungstalk oder Musik!)'
     )
 
   else:
     return (
-        f'Das ist ein spannendes Thema zu "{user_message}"! Als dein'
-        ' KI-Assistent helfe ich dir bei Mathe, Grammatik, Vokabeln und Noten.'
-        ' Frag mich einfach gezielt danach! 🤖'
+        f'Das ist ein interessanter Punkt ("{user_message}")! Als dein'
+        ' KI-Assistent bin ich voll auf deiner Seite. Frag mich einfach'
+        ' gezielt nach Mathe, Formeln oder Notizen! 🤖'
     )
 
 
