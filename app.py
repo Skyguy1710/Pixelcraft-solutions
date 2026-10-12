@@ -16,75 +16,107 @@ check_files()
 
 
 def generate_ai_response(user_message):
-  msg_lower = user_message.lower()
+  msg = user_message.lower()
 
-  # Zusammenfassungs- & Schul-Helfer
-  if 'zusammenfassen' in msg_lower or 'zusammenfassung' in msg_lower:
+  # Mathe-Logik
+  if (
+      any(op in msg for op in ['+', '-', '*', '/', 're("*", msg)'])
+      or 'was ist' in msg
+      or 'wieviel' in msg
+      or 'mathe' in msg
+  ):
+    try:
+      # Einfache Mathe-Auswertung falls Zahlen enthalten sind
+      clean_msg = (
+          msg.replace('was ist', '')
+          .replace('wieviel ist', '')
+          .replace('?', '')
+          .strip()
+      )
+      if any(c.isdigit() for c in clean_msg):
+        result = eval(clean_msg)
+        return f'🧮 Mathe-Ergebnis: {clean_msg} = {result}!'
+    except:
+      pass
     return (
-        '📚 **Lern-Zusammenfassung:** Hier sind die wichtigsten Punkte kurz'
-        ' für deine Klausur auf den Punkt gebracht:\n1. Konzentriere dich auf'
-        ' das Wesentliche.\n2. Nutze Schlüsselbegriffe.\n3. Mach regelmäßige'
-        ' Pausen! Du packst das! 🚀'
+        '🧮 **Mathe-Hilfe:** Ich kann rechnen, Formeln erklären (z.B. Satz des'
+        ' Pythagoras) oder dir bei Gleichungen helfen! Was brauchst du?'
     )
 
-  elif 'formel' in msg_lower or 'grammatik' in msg_lower:
-    return (
-        '💡 **Wissens-Schatzkiste:** Wenn du eine spezifische Matheformel oder'
-        ' eine Grammatikregel (z.B. Subjekt, Prädikat, Objekt) brauchst,'
-        ' schreib mir einfach das Thema und ich erkläre es dir kinderleicht!'
-    )
-
-  # Einkaufs-Logik im Chat
-  elif 'einkauf' in msg_lower or 'kaufen' in msg_lower:
-    return (
-        'Schreib es am besten direkt in die Einkaufsliste, damit du es im'
-        ' Supermarkt parat hast! 🛒'
-    )
-
-  # Sympathische Begrüßungen & Smalltalk
-  elif any(
-      w in msg_lower
-      for w in ['hallo', 'hi', 'hey', 'moin', 'guten tag', 'servus']
+  # Grammatik & Satzglieder
+  elif (
+      'satzglieder' in msg
+      or 'grammatik' in msg
+      or 'subjekt' in msg
+      or 'prädikat' in msg
   ):
     return (
-        'Hey! 😊 Schön, dass du da bist. Was lernen wir heute oder was steht'
-        ' bei dir an?'
+        '📖 **Deutsch & Grammatik:**\n• **Subjekt** (Wer oder was? Nominativ)\n•'
+        ' **Prädikat** (Was tut das Subjekt? Verb)\n• **Akkusativobjekt** (Wen'
+        ' oder was?)\n• **Dativobjekt** (Wem?)\nMit der Umstellprobe kannst du'
+        ' sie im Satz verschieben!'
     )
 
-  elif 'wie geht es dir' in msg_lower or 'wie gehts' in msg_lower:
+  # Zusammenfassung
+  elif 'zusammenfassen' in msg or 'zusammenfassung' in msg or 'fass' in msg:
     return (
-        'Mir geht es ausgezeichnet! Bereit, dir den Lerntag zu erleichtern. 🚀'
-        ' Und bei dir alles fit?'
+        '📚 **Zusammenfassung:** Hier sind die Kernpunkte:\n1. Konzentriere dich'
+        ' auf das Wesentliche.\n2. Nutze Schlüsselbegriffe.\n3. Wiederhole den'
+        ' Stoff regelmäßig. Du packst das! 🚀'
     )
 
-  elif 'wer bist du' in msg_lower or 'was kannst du' in msg_lower:
+  # Begrüßung
+  elif any(w in msg for w in ['hallo', 'hi', 'hey', 'moin', 'servus']):
     return (
-        'Ich bin dein smarter KI-Assistent von Pixelcraft Solutions! Ich helfe'
-        ' dir bei Notizen, fasse Texte für die Schule zusammen und quatsche'
-        ' auch gerne mit dir.'
+        'Hey! 😊 Schön, dass du da bist. Wie kann ich dir heute bei der Schule'
+        ' oder deinen Projekten helfen?'
     )
 
   else:
     return (
-        f'Das ist ein spannender Punkt: "{user_message}". Erzähl mir gerne'
-        ' mehr oder frag mich, wenn du eine Zusammenfassung brauchst!'
+        f'Das ist eine spannende Frage zu "{user_message}"! Als dein'
+        ' KI-Assistent helfe ich dir bei Mathe, Grammatik, Notizen und'
+        ' vielem mehr. Frag mich einfach gezielt danach! 🤖'
     )
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
   if request.method == 'POST':
-    if 'notiz' in request.form:
+    action = request.form.get('action')
+
+    if action == 'add_notiz':
       notiz = request.form.get('notiz')
       if notiz:
         with open('notizen.txt', 'a', encoding='utf-8') as f:
           f.write(notiz + '\n')
-    elif 'einkauf_item' in request.form:
-      einkauf = request.form.get('einkauf_item')
-      if einkauf:
+    elif action == 'del_notiz':
+      idx = int(request.form.get('index'))
+      if os.path.exists('notizen.txt'):
+        with open('notizen.txt', 'r', encoding='utf-8') as f:
+          lines = f.readlines()
+        if 0 <= idx < len(lines):
+          lines.pop(idx)
+          with open('notizen.txt', 'w', encoding='utf-8') as f:
+            f.writelines(lines)
+
+    elif action == 'add_einkauf':
+      item = request.form.get('einkauf_item')
+      menge = request.form.get('einkauf_menge', '1')
+      if item:
         with open('einkauf.txt', 'a', encoding='utf-8') as f:
-          f.write(einkauf + '\n')
-    elif 'nachricht' in request.form:
+          f.write(f'{item} (Anzahl: {menge})\n')
+    elif action == 'del_einkauf':
+      idx = int(request.form.get('index'))
+      if os.path.exists('einkauf.txt'):
+        with open('einkauf.txt', 'r', encoding='utf-8') as f:
+          lines = f.readlines()
+        if 0 <= idx < len(lines):
+          lines.pop(idx)
+          with open('einkauf.txt', 'w', encoding='utf-8') as f:
+            f.writelines(lines)
+
+    elif action == 'send_chat':
       nachricht = request.form.get('nachricht')
       if nachricht:
         with open('chats.txt', 'a', encoding='utf-8') as f:
