@@ -18,9 +18,6 @@ app.secret_key = 'Pixelcraft_Solution_Secret_2026_Key!'
 # Discord Webhook URL für euren Channel (1397866900268257353)
 DISCORD_WEBHOOK_URL = 'DEIN_DISCORD_WEBHOOK_LINK_HIER'
 
-# Dein Admin-Benutzername (Hier kannst du deinen Account als Admin festlegen)
-ADMIN_USERNAME = 'Ghost_rider272'
-
 
 def get_db_connection():
   conn = sqlite3.connect('users.db')
@@ -31,6 +28,7 @@ def get_db_connection():
 def init_db():
   conn = get_db_connection()
   c = conn.cursor()
+  # User-Tabelle
   c.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,7 +37,23 @@ def init_db():
             password TEXT NOT NULL
         )
     """)
+  # Admin-Tabelle für dynamische Admins
+  c.execute("""
+        CREATE TABLE IF NOT EXISTS admins (
+            username TEXT UNIQUE NOT NULL
+        )
+    """)
   conn.commit()
+
+  # Standardmäßig machen wir 'Ghost_rider272' beim allerersten Start zum Admin, falls noch keiner da ist
+  c.execute('SELECT COUNT(*) FROM admins')
+  if c.fetchone()[0] == 0:
+    c.execute(
+        'INSERT OR IGNORE INTO admins (username) VALUES (?)',
+        ('Ghost_rider272',),
+    )
+    conn.commit()
+
   conn.close()
 
 
@@ -51,6 +65,17 @@ except Exception as e:
 
 def hash_password(password):
   return hashlib.sha256(password.encode()).hexdigest()
+
+
+def is_admin_user(username):
+  if not username:
+    return False
+  conn = get_db_connection()
+  c = conn.cursor()
+  c.execute('SELECT 1 FROM admins WHERE username = ?', (username,))
+  res = c.fetchone()
+  conn.close()
+  return res is not None
 
 
 def send_discord_alert(username, contact, message):
@@ -213,23 +238,60 @@ def logout():
   return redirect(url_for('login'))
 
 
-# 🛡️ Geschützte Admin-Ansicht
-@app.route('/admin-dashboard')
+# 🛡️ Admin-Dashboard & Admin-Verwaltung
+@app.route('/admin-dashboard', methods=['GET', 'POST'])
 def admin_dashboard():
-  if (
-      'username' not in session
-      or session['username'].lower() != ADMIN_USERNAME.lower()
-  ):
+  if 'username' not in session or not is_admin_user(session['username']):
     flash('Zugriff verwehrt! Nur für Admins.')
     return redirect(url_for('index'))
 
   conn = get_db_connection()
   c = conn.cursor()
+
+  if request.method == 'POST':
+    action = request.form.get('action')
+    target_user = request.form.get('target_user', '').strip()
+
+    if action == 'add_admin' and target_user:
+      # Prüfen ob User existiert
+      c.execute('SELECT id FROM users WHERE username = ?', (target_user,))
+      if c.fetchone():
+        c.execute(
+            'INSERT OR IGNORE INTO admins (username) VALUES (?)', (target_user,)
+        )
+        conn.commit()
+        flash(f'Benutzer "{target_user}" wurde zum Admin ernannt.')
+      else:
+        flash(f'Benutzer "{target_user}" existiert nicht!')
+
+    elif action == 'remove_admin' and target_user:
+      # Verhindern dass man sich selbst entfernt (Sicherheit)
+      if target_user.lower() == session['username'].lower():
+        flash('Du kannst dich nicht selbst als Admin entfernen!')
+      else:
+        c.execute('DELETE FROM admins WHERE username = ?', (target_user,))
+        conn.commit()
+        flash(f'Admin-Rechte für "{target_user}" entfernt.')
+
+    return redirect(url_for('admin_dashboard'))
+
+  # Alle Nutzer laden
   c.execute('SELECT id, username, contact FROM users')
   users = c.fetchall()
+
+  # Alle Admins laden
+  c.execute('SELECT username FROM admins')
+  admins = [row['username'] for row in c.fetchall()]
+
   conn.close()
 
-  return render_template('admin.html', users=users, total_users=len(users))
+  return render_template(
+      'admin.html',
+      users=users,
+      admins=admins,
+      total_users=len(users),
+      current_admin=session['username'],
+  )
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -354,7 +416,7 @@ def index():
         pass
 
   schnitt = round(summe / anzahl, 2) if anzahl > 0 else 0.0
-  is_admin = username.lower() == ADMIN_USERNAME.lower()
+  is_admin = is_admin_user(username)
 
   return render_template(
       'index.html',
