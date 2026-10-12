@@ -119,8 +119,11 @@
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <h1>Pixelcraft Solutions</h1>
             <div>
-                <span>Angemeldet als: <b>{{ username }}</b></span> | 
-                <a href="{{ url_for('logout') }}" style="color:#e06c75; text-decoration:none; font-weight:bold;">Abmelden</a>
+                <span>Angemeldet als: <b>{{ username }}</b></span>
+                {% if is_admin %}
+                    | <a href="{{ url_for('admin_dashboard') }}" style="color:#98c379; text-decoration:none; font-weight:bold;">🛡️ Admin-Panel</a>
+                {% endif %}
+                | <a href="{{ url_for('logout') }}" style="color:#e06c75; text-decoration:none; font-weight:bold;">Abmelden</a>
             </div>
         </div>
 
