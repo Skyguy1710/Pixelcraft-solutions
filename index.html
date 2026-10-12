@@ -20,16 +20,6 @@
             margin: 0 auto 20px auto;
         }
         h1 { color: #89b4fa; margin: 0; font-size: 24px; }
-        .user-info { display: flex; align-items: center; gap: 15px; font-size: 14px; color: #a6e3a1; }
-        .logout-btn {
-            background-color: #f38ba8;
-            color: #11111b;
-            padding: 6px 12px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 13px;
-        }
         .container {
             display: flex;
             gap: 20px;
@@ -118,10 +108,6 @@
 <body>
     <div class="header-bar">
         <h1>Pixelcraft Solutions - Arbeitsbereich</h1>
-        <div class="user-info">
-            <span>Eingeloggt als: <strong>{{ user }}</strong></span>
-            <a href="/logout" class="logout-btn">Abmelden</a>
-        </div>
     </div>
 
     <div class="container">
@@ -129,7 +115,6 @@
         <div class="panel">
             <div class="panel-header">
                 <h2>📝 Meine Notizen</h2>
-                <span style="font-size: 13px; color: #a6e3a1;">{{ anzahl }} Notizen</span>
             </div>
             
             <div class="scroll-area">
@@ -137,7 +122,6 @@
                     {% for notiz in notizen %}
                         <li>
                             <span>{{ notiz }}</span>
-                            <a href="/loeschen_notiz/{{ loop.index0 }}" class="delete-btn">✕</a>
                         </li>
                     {% else %}
                         <li style="color: #6c7086;">Noch keine Notizen vorhanden.</li>
@@ -145,7 +129,7 @@
                 </ul>
             </div>
 
-            <form action="/hinzufuegen_notiz" method="POST">
+            <form method="POST">
                 <input type="text" name="notiz" placeholder="Neue Notiz eintragen..." required>
                 <button type="submit" class="submit-btn">Speichern</button>
             </form>
@@ -155,12 +139,6 @@
         <div class="panel">
             <div class="panel-header">
                 <h2>🤖 PCS AI-Chat</h2>
-                <div class="menu-container">
-                    <button class="menu-btn" title="Optionen">⋮</button>
-                    <div class="dropdown-content">
-                        <a href="/chat_leeren">Chat-Verlauf löschen</a>
-                    </div>
-                </div>
             </div>
 
             <div class="scroll-area">
@@ -174,8 +152,8 @@
                 {% endfor %}
             </div>
 
-            <form action="/chat_senden" method="POST">
-                <input type="text" name="nachricht" placeholder="Frage an die KI oder Erinnerung (z.B. 17:55)..." required>
+            <form method="POST">
+                <input type="text" name="nachricht" placeholder="Frage an die KI oder Erinnerung..." required>
                 <button type="submit" class="submit-btn">Senden</button>
             </form>
         </div>
