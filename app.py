@@ -66,13 +66,10 @@ def send_discord_alert(username, contact, message):
 def generate_ai_response(user_message, username, contact):
   msg = user_message.lower()
 
-  # 1. Kontext- / Spaß-Check
   is_joke = any(
       w in msg
       for w in ['spaß', 'spass', 'ironie', 'witz', 'lol', 'rofl', '😂', '😜']
   )
-
-  # 2. Notfall- & Straftaten-Erkennung
   alarm_keywords = [
       'gekillt',
       'getötet',
@@ -87,13 +84,12 @@ def generate_ai_response(user_message, username, contact):
 
   if any(kw in msg for kw in alarm_keywords):
     if not is_joke:
-      # Alarm auslösen!
       send_discord_alert(username, contact, user_message)
       return (
           '⚠️ **Wichtiger Hinweis:** Wenn du dich in einer Notlage befindest oder'
           ' Hilfe brauchst, wende dich bitte an die Telefonseelsorge unter **0800'
           ' 111 0 111** oder den Notruf **112/110**. Das Pixelcraft'
-          ' Sicherheitsteam wurde über diese Eingabe informiert.'
+          ' Sicherheitsteam wurde informiert.'
       )
     else:
       return (
@@ -101,7 +97,6 @@ def generate_ai_response(user_message, username, contact):
           ' dich an das Regelwerk bezüglich Witzen über Straftaten!'
       )
 
-  # Normaler KI-Chat & Mathe
   if any(
       w in msg
       for w in [
@@ -138,7 +133,7 @@ def generate_ai_response(user_message, username, contact):
   else:
     return (
         f'Das ist ein interessanter Punkt ("{user_message}")! Ich bin dein'
-        ' Assistent für Notizen, Mathe, Vokabeln und mehr. Frag mich einfach! 🤖'
+        ' Assistent für Notizen, Mathe und mehr. Frag mich einfach! 🤖'
     )
 
 
@@ -213,7 +208,6 @@ def index():
 
   username = session['username']
   contact = session['contact']
-
   user_file_prefix = f'{username}_'
 
   if request.method == 'POST':
@@ -224,12 +218,32 @@ def index():
       if notiz:
         with open(f'{user_file_prefix}notizen.txt', 'a', encoding='utf-8') as f:
           f.write(notiz + '\n')
+    elif action == 'del_notiz':
+      idx = int(request.form.get('index'))
+      fpath = f'{user_file_prefix}notizen.txt'
+      if os.path.exists(fpath):
+        with open(fpath, 'r', encoding='utf-8') as f:
+          lines = f.readlines()
+        if 0 <= idx < len(lines):
+          lines.pop(idx)
+          with open(fpath, 'w', encoding='utf-8') as f:
+            f.writelines(lines)
     elif action == 'add_einkauf':
       item = request.form.get('einkauf_item')
       menge = request.form.get('einkauf_menge', '1')
       if item:
         with open(f'{user_file_prefix}einkauf.txt', 'a', encoding='utf-8') as f:
           f.write(f'{item} (Anzahl: {menge})\n')
+    elif action == 'del_einkauf':
+      idx = int(request.form.get('index'))
+      fpath = f'{user_file_prefix}einkauf.txt'
+      if os.path.exists(fpath):
+        with open(fpath, 'r', encoding='utf-8') as f:
+          lines = f.readlines()
+        if 0 <= idx < len(lines):
+          lines.pop(idx)
+          with open(fpath, 'w', encoding='utf-8') as f:
+            f.writelines(lines)
     elif action == 'send_chat':
       nachricht = request.form.get('nachricht')
       if nachricht:
