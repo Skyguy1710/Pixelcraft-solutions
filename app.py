@@ -1,30 +1,107 @@
+import hashlib
 import os
-from flask import Flask, redirect, render_template, request, url_for
+import sqlite3
+from flask import (
+    Flask,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+import requests
 
 app = Flask(__name__)
-app.secret_key = 'Pixelcraft Solution1710'
+app.secret_key = 'Pixelcraft_Solution_Secret_2026_Key!'
+
+# Discord Webhook URL für euren Channel (1397866900268257353)
+DISCORD_WEBHOOK_URL = 'DEIN_DISCORD_WEBHOOK_LINK_HIER'
 
 
-def check_files():
-  for filename in [
-      'notizen.txt',
-      'chats.txt',
-      'einkauf.txt',
-      'noten.txt',
-      'vokabeln.txt',
-  ]:
-    if not os.path.exists(filename):
-      with open(filename, 'w', encoding='utf-8') as f:
-        f.write('')
+def init_db():
+  conn = sqlite3.connect('users.db')
+  c = conn.cursor()
+  c.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            contact TEXT NOT NULL,
+            password TEXT NOT NULL
+        )
+    """)
+  conn.commit()
+  conn.close()
 
 
-check_files()
+init_db()
 
 
-def generate_ai_response(user_message):
+def hash_password(password):
+  return hashlib.sha256(password.encode()).hexdigest()
+
+
+def send_discord_alert(username, contact, message):
+  if (
+      not DISCORD_WEBHOOK_URL
+      or DISCORD_WEBHOOK_URL == 'DEIN_DISCORD_WEBHOOK_LINK_HIER'
+  ):
+    return
+
+  payload = {
+      'content': (
+          f'🚨 **SICHERHEITS-ALARM (Pixelcraft Solutions)** 🚨\n'
+          f'**Benutzername:** {username}\n'
+          f'**Kontakt (E-Mail/Telefon):** {contact}\n'
+          f'**Verdächtige Nachricht:** {message}\n'
+          f'----------------------------------------'
+      )
+  }
+  try:
+    requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=3)
+  except Exception as e:
+    print('Webhook Fehler:', e)
+
+
+def generate_ai_response(user_message, username, contact):
   msg = user_message.lower()
 
-  # Erweiterte Mathe- & Formel-Erkennung
+  # 1. Kontext- / Spaß-Check
+  is_joke = any(
+      w in msg
+      for w in ['spaß', 'spass', 'ironie', 'witz', 'lol', 'rofl', '😂', '😜']
+  )
+
+  # 2. Notfall- & Straftaten-Erkennung
+  alarm_keywords = [
+      'gekillt',
+      'getötet',
+      'gebracht',
+      'missbraucht',
+      'vergewaltigt',
+      'amok',
+      'bombe',
+      'suizid',
+      'bringen',
+  ]
+
+  if any(kw in msg for kw in alarm_keywords):
+    if not is_joke:
+      # Alarm auslösen!
+      send_discord_alert(username, contact, user_message)
+      return (
+          '⚠️ **Wichtiger Hinweis:** Wenn du dich in einer Notlage befindest oder'
+          ' Hilfe brauchst, wende dich bitte an die Telefonseelsorge unter **0800'
+          ' 111 0 111** oder den Notruf **112/110**. Das Pixelcraft'
+          ' Sicherheitsteam wurde über diese Eingabe informiert.'
+      )
+    else:
+      return (
+          'Puh, Glück gehabt! Da kriegt man ja einen Schrecken 😅 Bitte halte'
+          ' dich an das Regelwerk bezüglich Witzen über Straftaten!'
+      )
+
+  # Normaler KI-Chat & Mathe
   if any(
       w in msg
       for w in [
@@ -42,187 +119,143 @@ def generate_ai_response(user_message):
   ):
     if 'wurzel' in msg or 'quadrat' in msg:
       return (
-          '🧮 **Wurzel & Quadrat:** Das Ziehen der Quadratwurzel ($\sqrt{x}$)'
-          ' ist die Umkehroperation zum Quadrieren ($x^2$). Beispiel:'
-          ' $\sqrt{25} = 5$, weil $5 \cdot 5 = 25$!'
+          '🧮 **Wurzel & Quadrat:** Quadratwurzel ($\sqrt{x}$) ist die'
+          ' Umkehrung zum Quadrieren ($x^2$). Beispiel: $\sqrt{25} = 5$.'
       )
-    elif 'pythagoras' in msg:
-      return (
-          '📐 **Satz des Pythagoras:** Gilt im rechtwinkligen Dreieck:'
-          ' $a^2 + b^2 = c^2$, wobei $c$ die Hypotenuse (längste Seite) ist!'
-      )
-    else:
-      return (
-          '🧮 **Mathe-Assistent:** Ich helfe dir bei Formeln, Prozentrechnung'
-          ' oder Gleichungen! Frag mich einfach nach einem bestimmten Thema.'
-      )
-
-  # Grammatik & Deutsch
+    return (
+        '🧮 **Mathe-Assistent:** Ich helfe dir bei Formeln, Prozentrechnung oder'
+        ' Gleichungen!'
+    )
   elif any(
       w in msg for w in ['satzglieder', 'grammatik', 'subjekt', 'prädikat', 'wort']
   ):
     return (
-        '📖 **Deutsch-Grammatik:**\n• **Subjekt:** Wer oder was? (Nominativ)\n•'
-        ' **Prädikat:** Was tut das Subjekt? (Verb)\n• **Objekte:** Wem?'
-        ' (Dativ) oder Wen/Was? (Akkusativ)'
+        '📖 **Deutsch-Grammatik:**\n• **Subjekt:** Wer oder was?\n• **Prädikat:**'
+        ' Was tut das Subjekt?\n• **Objekte:** Wem? oder Wen/Was?'
     )
-
-  # Zusammenfassungen
-  elif any(w in msg for w in ['zusammenfassen', 'zusammenfassung', 'fass', 'tl;dr']):
-    return (
-        '📚 **Lern-Tipp:** Konzentriere dich auf die Kernbegriffe, nutze unsere'
-        ' Vokabel-Karteikarten und mach Pausen mit dem Pomodoro-Timer! 🚀'
-    )
-
-  # Begrüßung
-  elif any(w in msg for w in ['hallo', 'hi', 'hey', 'moin', 'servus', 'guten']):
-    return (
-        'Hey! 😊 Schön, dass du da bist. Wie kann ich dir heute helfen? (Egal'
-        ' ob Schule, Beziehungstalk oder Musik!)'
-    )
-
+  elif any(w in msg for w in ['hallo', 'hi', 'hey', 'moin', 'servus']):
+    return f'Hey {username}! 😊 Schön, dass du da bist. Wie kann ich dir helfen?'
   else:
     return (
-        f'Das ist ein interessanter Punkt ("{user_message}")! Als dein'
-        ' KI-Assistent bin ich voll auf deiner Seite. Frag mich einfach'
-        ' gezielt nach Mathe, Formeln oder Notizen! 🤖'
+        f'Das ist ein interessanter Punkt ("{user_message}")! Ich bin dein'
+        ' Assistent für Notizen, Mathe, Vokabeln und mehr. Frag mich einfach! 🤖'
     )
+
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+  if request.method == 'POST':
+    username = request.form.get('username').strip()
+    contact = request.form.get('contact').strip()
+    password = request.form.get('password')
+    rules_accepted = request.form.get('rules_accepted')
+
+    if not rules_accepted:
+      flash('Du musst das Regelwerk und die DSGVO akzeptieren!')
+      return redirect(url_for('register'))
+
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute('SELECT id FROM users WHERE username = ?', (username,))
+    if c.fetchone():
+      flash('Benutzername bereits vergeben!')
+      conn.close()
+      return redirect(url_for('register'))
+
+    hashed_pw = hash_password(password)
+    c.execute(
+        'INSERT INTO users (username, contact, password) VALUES (?, ?, ?)',
+        (username, contact, hashed_pw),
+    )
+    conn.commit()
+    conn.close()
+
+    flash('Registrierung erfolgreich! Bitte melde dich an.')
+    return redirect(url_for('login'))
+
+  return render_template('register.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+  if request.method == 'POST':
+    username = request.form.get('username').strip()
+    password = request.form.get('password')
+
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute(
+        'SELECT id, contact, password FROM users WHERE username = ?', (username,)
+    )
+    user = c.fetchone()
+    conn.close()
+
+    if user and user[2] == hash_password(password):
+      session['username'] = username
+      session['contact'] = user[1]
+      return redirect(url_for('index'))
+    else:
+      flash('Ungültige Anmeldedaten!')
+
+  return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+  session.clear()
+  return redirect(url_for('login'))
 
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+  if 'username' not in session:
+    return redirect(url_for('login'))
+
+  username = session['username']
+  contact = session['contact']
+
+  user_file_prefix = f'{username}_'
+
   if request.method == 'POST':
     action = request.form.get('action')
 
-    # Notizen
     if action == 'add_notiz':
       notiz = request.form.get('notiz')
       if notiz:
-        with open('notizen.txt', 'a', encoding='utf-8') as f:
+        with open(f'{user_file_prefix}notizen.txt', 'a', encoding='utf-8') as f:
           f.write(notiz + '\n')
-    elif action == 'del_notiz':
-      idx = int(request.form.get('index'))
-      if os.path.exists('notizen.txt'):
-        with open('notizen.txt', 'r', encoding='utf-8') as f:
-          lines = f.readlines()
-        if 0 <= idx < len(lines):
-          lines.pop(idx)
-          with open('notizen.txt', 'w', encoding='utf-8') as f:
-            f.writelines(lines)
-
-    # Einkaufsliste
     elif action == 'add_einkauf':
       item = request.form.get('einkauf_item')
       menge = request.form.get('einkauf_menge', '1')
       if item:
-        with open('einkauf.txt', 'a', encoding='utf-8') as f:
+        with open(f'{user_file_prefix}einkauf.txt', 'a', encoding='utf-8') as f:
           f.write(f'{item} (Anzahl: {menge})\n')
-    elif action == 'del_einkauf':
-      idx = int(request.form.get('index'))
-      if os.path.exists('einkauf.txt'):
-        with open('einkauf.txt', 'r', encoding='utf-8') as f:
-          lines = f.readlines()
-        if 0 <= idx < len(lines):
-          lines.pop(idx)
-          with open('einkauf.txt', 'w', encoding='utf-8') as f:
-            f.writelines(lines)
-
-    # Notenrechner
-    elif action == 'add_note':
-      fach = request.form.get('fach')
-      note = request.form.get('note')
-      if fach and note:
-        with open('noten.txt', 'a', encoding='utf-8') as f:
-          f.write(f'{fach}: {note}\n')
-    elif action == 'del_note':
-      idx = int(request.form.get('index'))
-      if os.path.exists('noten.txt'):
-        with open('noten.txt', 'r', encoding='utf-8') as f:
-          lines = f.readlines()
-        if 0 <= idx < len(lines):
-          lines.pop(idx)
-          with open('noten.txt', 'w', encoding='utf-8') as f:
-            f.writelines(lines)
-
-    # Vokabeltrainer
-    elif action == 'add_vokabel':
-      wort = request.form.get('wort')
-      uebersetzung = request.form.get('uebersetzung')
-      if wort and uebersetzung:
-        with open('vokabeln.txt', 'a', encoding='utf-8') as f:
-          f.write(f'{wort}|{uebersetzung}\n')
-    elif action == 'del_vokabel':
-      idx = int(request.form.get('index'))
-      if os.path.exists('vokabeln.txt'):
-        with open('vokabeln.txt', 'r', encoding='utf-8') as f:
-          lines = f.readlines()
-        if 0 <= idx < len(lines):
-          lines.pop(idx)
-          with open('vokabeln.txt', 'w', encoding='utf-8') as f:
-            f.writelines(lines)
-
-    # AI Chat
     elif action == 'send_chat':
       nachricht = request.form.get('nachricht')
       if nachricht:
-        with open('chats.txt', 'a', encoding='utf-8') as f:
+        with open(f'{user_file_prefix}chats.txt', 'a', encoding='utf-8') as f:
           f.write(f'Du: {nachricht}\n')
-        ai_reply = generate_ai_response(nachricht)
-        with open('chats.txt', 'a', encoding='utf-8') as f:
+        ai_reply = generate_ai_response(nachricht, username, contact)
+        with open(f'{user_file_prefix}chats.txt', 'a', encoding='utf-8') as f:
           f.write(f'KI: {ai_reply}\n')
 
     return redirect(url_for('index'))
 
-  # Daten laden
-  notizen = []
-  if os.path.exists('notizen.txt'):
-    with open('notizen.txt', 'r', encoding='utf-8') as f:
-      notizen = [line.strip() for line in f.readlines()]
+  def read_file(filename):
+    if os.path.exists(filename):
+      with open(filename, 'r', encoding='utf-8') as f:
+        return [line.strip() for line in f.readlines()]
+    return []
 
-  einkauf_liste = []
-  if os.path.exists('einkauf.txt'):
-    with open('einkauf.txt', 'r', encoding='utf-8') as f:
-      einkauf_liste = [line.strip() for line in f.readlines()]
-
-  noten_liste = []
-  noten_summe = 0
-  if os.path.exists('noten.txt'):
-    with open('noten.txt', 'r', encoding='utf-8') as f:
-      for line in f.readlines():
-        line = line.strip()
-        if line:
-          noten_liste.append(line)
-          try:
-            val = float(line.split(': ')[1])
-            noten_summe += val
-          except:
-            pass
-
-  schnitt = (
-      round(noten_summe / len(noten_liste), 2) if len(noten_liste) > 0 else 0.0
-  )
-
-  vokabeln_liste = []
-  if os.path.exists('vokabeln.txt'):
-    with open('vokabeln.txt', 'r', encoding='utf-8') as f:
-      for line in f.readlines():
-        line = line.strip()
-        if '|' in line:
-          w, u = line.split('|', 1)
-          vokabeln_liste.append({'wort': w, 'uebersetzung': u})
-
-  chats = []
-  if os.path.exists('chats.txt'):
-    with open('chats.txt', 'r', encoding='utf-8') as f:
-      chats = [line.strip() for line in f.readlines()]
+  notizen = read_file(f'{user_file_prefix}notizen.txt')
+  einkauf_liste = read_file(f'{user_file_prefix}einkauf.txt')
+  chats = read_file(f'{user_file_prefix}chats.txt')
 
   return render_template(
       'index.html',
+      username=username,
       notizen=notizen,
       einkauf_liste=einkauf_liste,
-      noten_liste=noten_liste,
-      schnitt=schnitt,
-      vokabeln_liste=vokabeln_liste,
       chats=chats,
   )
 
