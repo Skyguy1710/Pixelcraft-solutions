@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Pixelcraft Solutions - Anmelden</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1c23; color: #fff; padding: 40px; display: flex; justify-content: center; }
+        .box { background: #21252b; padding: 30px; border-radius: 8px; max-width: 400px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h2 { color: #61afef; margin-top: 0; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 8px 0 15px 0; border-radius: 4px; border: 1px solid #3e4451; background: #181a1f; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #61afef; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: #1a1c23; }
+        button:hover { background: #498cd6; }
+        a { color: #61afef; text-decoration: none; }
+        .flash { color: #98c379; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Anmelden</h2>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash">{{ messages[0] }}</div>
+            {% endif %}
+        {% endwith %}
+        <form method="POST">
+            <label>Benutzername:</label>
+            <input type="text" name="username" required placeholder="Dein Benutzername">
+
+            <label>Passwort:</label>
+            <input type="password" name="password" required placeholder="Dein Passwort">
+
+            <button type="submit">Login</button>
+        </form>
+        <p style="text-align: center; font-size: 0.9rem; margin-top: 15px;">
+            Noch kein Konto? <a href="{{ url_for('register') }}">Hier registrieren</a>
+        </p>
+    </div>
+</body>
+</html>
