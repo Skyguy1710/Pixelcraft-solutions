@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Pixelcraft Solutions - Registrierung</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1c23; color: #fff; padding: 40px; display: flex; justify-content: center; }
+        .box { background: #21252b; padding: 30px; border-radius: 8px; max-width: 500px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h2 { color: #61afef; margin-top: 0; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 8px 0 15px 0; border-radius: 4px; border: 1px solid #3e4451; background: #181a1f; color: #fff; box-sizing: border-box; }
+        .rules-box { background: #181a1f; border: 1px solid #3e4451; padding: 10px; height: 160px; overflow-y: auto; font-size: 0.82rem; margin-bottom: 15px; border-radius: 4px; line-height: 1.4; }
+        button { width: 100%; padding: 12px; background: #61afef; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: #1a1c23; }
+        button:hover { background: #498cd6; }
+        a { color: #61afef; text-decoration: none; }
+        .flash { color: #e06c75; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Konto erstellen</h2>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash">{{ messages[0] }}</div>
+            {% endif %}
+        {% endwith %}
+        <form method="POST">
+            <label>Benutzername:</label>
+            <input type="text" name="username" required placeholder="z.B. Alex123">
+
+            <label>E-Mail-Adresse oder Telefonnummer:</label>
+            <input type="text" name="contact" required placeholder="name@email.de oder 0176...">
+
+            <label>Passwort:</label>
+            <input type="password" name="password" required placeholder="Passwort wählen">
+
+            <label>📜 Regelwerk & Nutzungsbedingungen:</label>
+            <div class="rules-box">
+                <b>1. Hausrecht des Server-Teams:</b> Das Betreiber-Team besitzt das uneingeschränkte Hausrecht und kann Accounts bei Verstößen ohne Vorwarnung sperren oder Inhalte löschen.<br><br>
+                <b>2. Geltung des Strafgesetzbuches (StGB):</b> Deutsches Recht gilt uneingeschränkt. Folgende Verstöße werden zur Anzeige gebracht:<br>
+                • <b>§ 86a StGB:</b> Verwendung von Kennzeichen verfassungswidriger Organisationen (z.B. Nazi-Symbole, Hakenkreuze).<br>
+                • <b>§ 130 StGB:</b> Volksverhetzung und rassistische/diskriminierende Hetze.<br>
+                • <b>§ 241 / § 240 StGB:</b> Bedrohung und Nötigung.<br>
+                • <b>Schwere Straftaten:</b> Androhung oder Beichte von Gewalttaten, Amokläufen oder Missbrauch.<br><br>
+                <b>3. Datenschutz (DSGVO):</b> Daten (Benutzername, Kontakt, Passwörter) werden zweckgebunden gespeichert. Im Falle akuter Notfälle oder Straftaten werden Logs zur Gefahrenabwehr an Behörden übergeben.
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <input type="checkbox" name="rules_accepted" id="rules" required>
+                <label for="rules" style="font-size: 0.9rem;">Ich akzeptiere das Regelwerk, das Hausrecht und die DSGVO.</label>
+            </div>
+
+            <button type="submit">Jetzt Registrieren</button>
+        </form>
+        <p style="text-align: center; font-size: 0.9rem; margin-top: 15px;">
+            Bereits ein Konto? <a href="{{ url_for('login') }}">Hier anmelden</a>
+        </p>
+    </div>
+</body>
+</html>
