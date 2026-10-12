@@ -1,29 +1,99 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, redirect, render_template, request, url_for
 
 app = Flask(__name__)
 app.secret_key = 'Pixelcraft Solution1710'
 
-# Hilfsfunktion: Stellt sicher, dass alle benötigten Textdateien existieren
+
+# Automatische Erstellung der Textdateien falls sie fehlen
 def check_files():
-    files = ['benutzer.txt', 'notizen.txt', 'chats.txt']
-    for file in files:
-        if not os.path.exists(file):
-            with open(file, 'w', encoding='utf-8') as f:
-                f.write('')  # Erstellt eine leere Datei, falls sie fehlt
+  for filename in ['notizen.txt', 'chats.txt']:
+    if not os.path.exists(filename):
+      with open(filename, 'w', encoding='utf-8') as f:
+        f.write('')
 
-@app.route('/')
-def home():
-    check_files()  # Dateien vor dem Laden absichern
-    try:
-        # Hier landet dein normaler Startseiten-Code (z.B. Login oder Index)
-        return render_template('login.html')
-    except Exception as e:
-        return f"Ein Fehler ist aufgetreten: {str(e)}", 500
 
-# Falls du weitere Routen hast (z.B. für Login, Registrierung oder Chats), 
-# füge sie einfach hier darunter ein und achte darauf, überall 
-# open(..., encoding='utf-8') zu verwenden.
+check_files()
+
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+  # Wenn etwas über die Hauptseite abgesendet wird (Notiz oder Chat)
+  if request.method == 'POST':
+    if 'notiz' in request.form:
+      notiz = request.form.get('notiz')
+      if notiz:
+        with open('notizen.txt', 'a', encoding='utf-8') as f:
+          f.write(notiz + '\n')
+    elif 'nachricht' in request.form:
+      nachricht = request.form.get('nachricht')
+      if nachricht:
+        with open('chats.txt', 'a', encoding='utf-8') as f:
+          f.write(nachricht + '\n')
+    return redirect(url_for('index'))
+
+  # Notizen und Chats auslesen
+  notizen = []
+  if os.path.exists('notizen.txt'):
+    with open('notizen.txt', 'r', encoding='utf-8') as f:
+      notizen = [line.strip() for line in f.readlines()]
+
+  chats = []
+  if os.path.exists('chats.txt'):
+    with open('chats.txt', 'r', encoding='utf-8') as f:
+      chats = [line.strip() for line in f.readlines()]
+
+  return render_template('index.html', notizen=notizen, chats=chats)
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
+  app.run(debug=True)import os
+from flask import Flask, redirect, render_template, request, url_for
+
+app = Flask(__name__)
+app.secret_key = 'Pixelcraft Solution1710'
+
+
+# Automatische Erstellung der Textdateien falls sie fehlen
+def check_files():
+  for filename in ['notizen.txt', 'chats.txt']:
+    if not os.path.exists(filename):
+      with open(filename, 'w', encoding='utf-8') as f:
+        f.write('')
+
+
+check_files()
+
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+  # Wenn etwas über die Hauptseite abgesendet wird (Notiz oder Chat)
+  if request.method == 'POST':
+    if 'notiz' in request.form:
+      notiz = request.form.get('notiz')
+      if notiz:
+        with open('notizen.txt', 'a', encoding='utf-8') as f:
+          f.write(notiz + '\n')
+    elif 'nachricht' in request.form:
+      nachricht = request.form.get('nachricht')
+      if nachricht:
+        with open('chats.txt', 'a', encoding='utf-8') as f:
+          f.write(nachricht + '\n')
+    return redirect(url_for('index'))
+
+  # Notizen und Chats auslesen
+  notizen = []
+  if os.path.exists('notizen.txt'):
+    with open('notizen.txt', 'r', encoding='utf-8') as f:
+      notizen = [line.strip() for line in f.readlines()]
+
+  chats = []
+  if os.path.exists('chats.txt'):
+    with open('chats.txt', 'r', encoding='utf-8') as f:
+      chats = [line.strip() for line in f.readlines()]
+
+  return render_template('index.html', notizen=notizen, chats=chats)
+
+
+if __name__ == '__main__':
+  app.run(debug=True)
