@@ -2,288 +2,54 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixelcraft Solutions - Arbeitsbereich</title>
+    <title>Pixelcraft Solutions - Registrierung</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1c23;
-            color: #e0e0e0;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            color: #61afef;
-            margin-bottom: 25px;
-        }
-        .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 20px;
-        }
-        .card {
-            background-color: #21252b;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            display: flex;
-            flex-direction: column;
-            height: 480px;
-        }
-        h3 {
-            margin-top: 0;
-            border-bottom: 2px solid #3e4451;
-            padding-bottom: 10px;
-            color: #abb2bf;
-        }
-        .list-box {
-            flex-grow: 1;
-            overflow-y: auto;
-            background: #181a1f;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            border: 1px solid #3e4451;
-            white-space: pre-line;
-        }
-        .item {
-            background: #282c34;
-            padding: 8px 12px;
-            margin-bottom: 8px;
-            border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            word-break: break-word;
-        }
-        form {
-            display: flex;
-            gap: 8px;
-        }
-        input[type="text"], input[type="number"], input[type="date"], select {
-            padding: 10px;
-            border-radius: 6px;
-            border: 1px solid #3e4451;
-            background: #181a1f;
-            color: #fff;
-            outline: none;
-        }
-        input[type="text"], input[type="date"] { flex-grow: 1; }
-        
-        button {
-            padding: 10px 15px;
-            background-color: #61afef;
-            color: #1a1c23;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover { background-color: #498cd6; }
-        
-        .btn-delete {
-            background-color: #e06c75;
-            color: white;
-            padding: 4px 8px;
-            font-size: 12px;
-        }
-        .btn-delete:hover { background-color: #be5046; }
-        
-        .btn-share {
-            background-color: #98c379;
-            color: #1a1c23;
-            padding: 4px 8px;
-            font-size: 12px;
-            margin-right: 5px;
-        }
-
-        .flashcard {
-            background: #282c34;
-            border: 2px solid #61afef;
-            border-radius: 8px;
-            height: 120px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-            user-select: none;
-            margin-bottom: 15px;
-            padding: 10px;
-        }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1c23; color: #fff; padding: 40px; display: flex; justify-content: center; }
+        .box { background: #21252b; padding: 30px; border-radius: 8px; max-width: 500px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h2 { color: #61afef; margin-top: 0; }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 8px 0 15px 0; border-radius: 4px; border: 1px solid #3e4451; background: #181a1f; color: #fff; box-sizing: border-box; }
+        .rules-box { background: #181a1f; border: 1px solid #3e4451; padding: 10px; height: 120px; overflow-y: auto; font-size: 0.85rem; margin-bottom: 15px; border-radius: 4px; line-height: 1.4; }
+        button { width: 100%; padding: 12px; background: #61afef; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: #1a1c23; }
+        button:hover { background: #498cd6; }
+        a { color: #61afef; text-decoration: none; }
+        .flash { color: #e06c75; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-
-    <h1>Pixelcraft Solutions - Arbeitsbereich</h1>
-
-    <div class="container">
-        <!-- 📝 Notizen -->
-        <div class="card">
-            <h3>📝 Meine Notizen</h3>
-            <div class="list-box">
-                {% for notiz in notizen %}
-                    <div class="item">
-                        <span>{{ notiz }}</span>
-                        <div>
-                            <button type="button" class="btn-share" onclick="shareItem('{{ notiz }}')">🔗 Share</button>
-                            <form method="POST" style="display:inline;">
-                                <input type="hidden" name="action" value="del_notiz">
-                                <input type="hidden" name="index" value="{{ loop.index0 }}">
-                                <button type="submit" class="btn-delete">X</button>
-                            </form>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            <form method="POST">
-                <input type="hidden" name="action" value="add_notiz">
-                <input type="text" name="notiz" placeholder="Neue Notiz..." required>
-                <button type="submit">Speichern</button>
-            </form>
-        </div>
-
-        <!-- ❤️ Beziehungs-Jubiläums-Rechner -->
-        <div class="card">
-            <h3>❤️ Beziehungs-Rechner</h3>
-            <div class="list-box" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-                <p style="color:#abb2bf; margin-bottom: 5px;">Wähle euren Jahrestag / Startdatum:</p>
-                <input type="date" id="rel-date" onchange="calcLove()" style="margin-bottom: 15px; width: 80%;">
-                <div id="rel-result" style="font-size: 1.1rem; color: #e06c75; font-weight: bold;">
-                    Trage euer Datum ein ❤️
-                </div>
-            </div>
-        </div>
-
-        <!-- 🎵 Lo-Fi Fokus-Musik Player -->
-        <div class="card">
-            <h3>🎵 Lo-Fi Chill Beats</h3>
-            <div class="list-box" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
-                <p style="color:#abb2bf; margin-bottom:15px;">Entspannte Hintergrundmusik zum Lernen & Chillen 🎧</p>
-                <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/0vvXsWCC9xrXsKd4FyS8kM?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-            </div>
-        </div>
-
-        <!-- 📊 Notenrechner -->
-        <div class="card">
-            <h3>📊 Notenrechner (Schnitt: <span style="color:#61afef;">{{ schnitt }}</span>)</h3>
-            <div class="list-box">
-                {% for item in noten_liste %}
-                    <div class="item">
-                        <span>📖 {{ item }}</span>
-                        <form method="POST" style="margin:0;">
-                            <input type="hidden" name="action" value="del_note">
-                            <input type="hidden" name="index" value="{{ loop.index0 }}">
-                            <button type="submit" class="btn-delete">X</button>
-                        </form>
-                    </div>
-                {% endfor %}
-            </div>
-            <form method="POST">
-                <input type="hidden" name="action" value="add_note">
-                <input type="text" name="fach" placeholder="Fach (z.B. Mathe)" required>
-                <input type="number" name="note" placeholder="Note" min="1" max="6" step="0.1" required style="width:70px;">
-                <button type="submit">+</button>
-            </form>
-        </div>
-
-        <!-- 🃏 Vokabel-Trainer -->
-        <div class="card">
-            <h3>🃏 Vokabel-Trainer</h3>
-            {% if vokabeln_liste %}
-                <div class="flashcard" id="card" onclick="flipCard()">Klick zum Starten</div>
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <button type="button" onclick="nextCard()" style="flex-grow:1;">Nächste Karte ➔</button>
-                </div>
-            {% else %}
-                <div class="list-box" style="display:flex; align-items:center; justify-content:center;">Trage unten deine Vokabeln ein!</div>
+    <div class="box">
+        <h2>Konto erstellen</h2>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash">{{ messages[0] }}</div>
             {% endif %}
-            <form method="POST">
-                <input type="hidden" name="action" value="add_vokabel">
-                <input type="text" name="wort" placeholder="Wort (Apple)" required>
-                <input type="text" name="uebersetzung" placeholder="Apfel" required>
-                <button type="submit">+</button>
-            </form>
-        </div>
+        {% endwith %}
+        <form method="POST">
+            <label>Benutzername:</label>
+            <input type="text" name="username" required placeholder="z.B. Alex123">
 
-        <!-- 🤖 PCS AI-Chat -->
-        <div class="card">
-            <h3>🤖 PCS AI-Chat</h3>
-            <div class="list-box">
-                {% for chat in chats %}
-                    <div class="item" style="display:block;">{{ chat }}</div>
-                {% endfor %}
+            <label>E-Mail-Adresse oder Telefonnummer:</label>
+            <input type="text" name="contact" required placeholder="name@email.de oder 0176...">
+
+            <label>Passwort:</label>
+            <input type="password" name="password" required placeholder="Passwort wählen">
+
+            <label>📜 Regelwerk & DSGVO:</label>
+            <div class="rules-box">
+                <b>1. Hausrecht:</b> Das Server-Team behält sich das uneingeschränkte Hausrecht vor.<br>
+                <b>2. Strafrecht (StGB):</b> Das deutsche Strafrecht gilt uneingeschränkt. Gewaltdrohungen, Volksverhetzung (§ 130 StGB), verbotene Symbole (§ 86a StGB) und schwere Straftaten führen zur Anzeige bei den Ermittlungsbehörden.<br>
+                <b>3. DSGVO:</b> Daten werden zweckgebunden verarbeitet und im Falle von Notfällen zur Gefahrenabwehr verwendet.
             </div>
-            <form method="POST">
-                <input type="hidden" name="action" value="send_chat">
-                <input type="text" name="nachricht" placeholder="Frag mich was (z.B. Wurzel)..." required>
-                <button type="submit">Senden</button>
-            </form>
-        </div>
+
+            <div style="margin-bottom: 15px;">
+                <input type="checkbox" name="rules_accepted" id="rules" required>
+                <label for="rules" style="font-size: 0.9rem;">Ich akzeptiere das Regelwerk und die DSGVO.</label>
+            </div>
+
+            <button type="submit">Jetzt Registrieren</button>
+        </form>
+        <p style="text-align: center; font-size: 0.9rem; margin-top: 15px;">
+            Bereits ein Konto? <a href="{{ url_for('login') }}">Hier anmelden</a>
+        </p>
     </div>
-
-    <script>
-        // Beziehungs-Rechner Logik
-        function calcLove() {
-            const dateInput = document.getElementById('rel-date').value;
-            if (!dateInput) return;
-            const start = new Date(dateInput);
-            const now = new Date();
-            const diffTime = Math.abs(now - start);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            const months = Math.floor(diffDays / 30.44);
-            
-            document.getElementById('rel-result').innerHTML = `
-                ✨ Zusammen seit ${diffDays} Tagen! ✨<br>
-                <span style="font-size:0.9rem; color:#abb2bf;">(Ca. ${months} Monate pure Liebe ❤️)</span>
-            `;
-        }
-
-        // Vokabel Flashcard Logik
-        const cards = [
-            {% for v in vokabeln_liste %}
-                { wort: "{{ v.wort }}", uebersetzung: "{{ v.uebersetzung }}" },
-            {% endfor %}
-        ];
-        let currentCardIndex = 0;
-        let isShowingFront = true;
-
-        function updateCardDisplay() {
-            if (cards.length === 0) return;
-            const cardElement = document.getElementById('card');
-            if (isShowingFront) {
-                cardElement.innerHTML = "<b>Wort:</b><br>" + cards[currentCardIndex].wort;
-                cardElement.style.borderColor = "#61afef";
-            } else {
-                cardElement.innerHTML = "<b>Übersetzung:</b><br>" + cards[currentCardIndex].uebersetzung;
-                cardElement.style.borderColor = "#98c379";
-            }
-        }
-        function flipCard() {
-            if (cards.length === 0) return;
-            isShowingFront = !isShowingFront;
-            updateCardDisplay();
-        }
-        function nextCard() {
-            if (cards.length === 0) return;
-            currentCardIndex = (currentCardIndex + 1) % cards.length;
-            isShowingFront = true;
-            updateCardDisplay();
-        }
-        if (cards.length > 0) { updateCardDisplay(); }
-
-        // Quick-Share Funktion
-        function shareItem(text) {
-            const shareText = "Pixelcraft Solutions - Eintrag: " + text;
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(shareText);
-                alert("In Zwischenablage kopiert! Bereit zum Teilen: \n" + shareText);
-            }
-        }
-    </script>
-
 </body>
 </html>
