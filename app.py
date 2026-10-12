@@ -15,7 +15,7 @@ import requests
 app = Flask(__name__)
 app.secret_key = 'Pixelcraft_Solution_Secret_2026_Key!'
 
-# Discord Webhook URL für euren Channel
+# Discord Webhook URL für euren Channel (1397866900268257353)
 DISCORD_WEBHOOK_URL = 'DEIN_DISCORD_WEBHOOK_LINK_HIER'
 
 
@@ -222,6 +222,7 @@ def index():
   if request.method == 'POST':
     action = request.form.get('action')
 
+    # Notizen
     if action == 'add_notiz':
       notiz = request.form.get('notiz')
       if notiz:
@@ -239,6 +240,8 @@ def index():
             lines.pop(idx)
             with open(fpath, 'w', encoding='utf-8') as f:
               f.writelines(lines)
+
+    # Einkaufsliste
     elif action == 'add_einkauf':
       item = request.form.get('einkauf_item')
       menge = request.form.get('einkauf_menge', '1')
@@ -257,6 +260,48 @@ def index():
             lines.pop(idx)
             with open(fpath, 'w', encoding='utf-8') as f:
               f.writelines(lines)
+
+    # Notenrechner
+    elif action == 'add_note':
+      fach = request.form.get('fach')
+      note = request.form.get('note')
+      if fach and note:
+        with open(f'{user_file_prefix}noten.txt', 'a', encoding='utf-8') as f:
+          f.write(f'{fach}:{note}\n')
+    elif action == 'del_note':
+      idx = request.form.get('index')
+      if idx is not None:
+        idx = int(idx)
+        fpath = f'{user_file_prefix}noten.txt'
+        if os.path.exists(fpath):
+          with open(fpath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+          if 0 <= idx < len(lines):
+            lines.pop(idx)
+            with open(fpath, 'w', encoding='utf-8') as f:
+              f.writelines(lines)
+
+    # Vokabeltrainer
+    elif action == 'add_vokabel':
+      de = request.form.get('deutsch')
+      fr = request.form.get('fremd')
+      if de and fr:
+        with open(f'{user_file_prefix}vokabeln.txt', 'a', encoding='utf-8') as f:
+          f.write(f'{de} = {fr}\n')
+    elif action == 'del_vokabel':
+      idx = request.form.get('index')
+      if idx is not None:
+        idx = int(idx)
+        fpath = f'{user_file_prefix}vokabeln.txt'
+        if os.path.exists(fpath):
+          with open(fpath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+          if 0 <= idx < len(lines):
+            lines.pop(idx)
+            with open(fpath, 'w', encoding='utf-8') as f:
+              f.writelines(lines)
+
+    # Chat
     elif action == 'send_chat':
       nachricht = request.form.get('nachricht')
       if nachricht:
@@ -277,6 +322,26 @@ def index():
   notizen = read_file(f'{user_file_prefix}notizen.txt')
   einkauf_liste = read_file(f'{user_file_prefix}einkauf.txt')
   chats = read_file(f'{user_file_prefix}chats.txt')
+  vokabeln_liste = read_file(f'{user_file_prefix}vokabeln.txt')
+
+  # Noten auslesen & Schnitt berechnen
+  noten_roh = read_file(f'{user_file_prefix}noten.txt')
+  noten_liste = []
+  summe = 0
+  anzahl = 0
+  for line in noten_roh:
+    if ':' in line:
+      teile = line.split(':')
+      fach = teile[0]
+      try:
+        note_val = float(teile[1])
+        noten_liste.append({'fach': fach, 'note': note_val})
+        summe += note_val
+        anzahl += 1
+      except ValueError:
+        pass
+
+  schnitt = round(summe / anzahl, 2) if anzahl > 0 else 0.0
 
   return render_template(
       'index.html',
@@ -284,9 +349,9 @@ def index():
       notizen=notizen,
       einkauf_liste=einkauf_liste,
       chats=chats,
-      noten_liste=[],
-      schnitt=0.0,
-      vokabeln_liste=[],
+      noten_liste=noten_liste,
+      schnitt=schnitt,
+      vokabeln_liste=vokabeln_liste,
   )
 
 
