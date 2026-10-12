@@ -2,58 +2,197 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Pixelcraft Solutions - Registrierung</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixelcraft Solutions - Arbeitsbereich</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1a1c23; color: #fff; padding: 40px; display: flex; justify-content: center; }
-        .box { background: #21252b; padding: 30px; border-radius: 8px; max-width: 500px; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        h2 { color: #61afef; margin-top: 0; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 8px 0 15px 0; border-radius: 4px; border: 1px solid #3e4451; background: #181a1f; color: #fff; box-sizing: border-box; }
-        .rules-box { background: #181a1f; border: 1px solid #3e4451; padding: 10px; height: 160px; overflow-y: auto; font-size: 0.82rem; margin-bottom: 15px; border-radius: 4px; line-height: 1.4; }
-        button { width: 100%; padding: 12px; background: #61afef; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: #1a1c23; }
-        button:hover { background: #498cd6; }
-        a { color: #61afef; text-decoration: none; }
-        .flash { color: #e06c75; margin-bottom: 10px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1c23;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 95vh;
+        }
+        .main-content {
+            flex: 1;
+        }
+        h1 {
+            color: #61afef;
+            margin: 0;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        .card {
+            background-color: #21252b;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            height: 480px;
+        }
+        h3 {
+            margin-top: 0;
+            border-bottom: 2px solid #3e4451;
+            padding-bottom: 10px;
+            color: #abb2bf;
+        }
+        .list-box {
+            flex-grow: 1;
+            overflow-y: auto;
+            background: #181a1f;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #3e4451;
+            white-space: pre-line;
+        }
+        .item {
+            background: #282c34;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            word-break: break-word;
+        }
+        form {
+            display: flex;
+            gap: 8px;
+        }
+        input[type="text"], input[type="number"], select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #3e4451;
+            background: #181a1f;
+            color: #fff;
+            outline: none;
+        }
+        input[type="text"] { flex-grow: 1; }
+        
+        button {
+            padding: 10px 15px;
+            background-color: #61afef;
+            color: #1a1c23;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover { background-color: #498cd6; }
+        
+        .btn-delete {
+            background-color: #e06c75;
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .btn-delete:hover { background-color: #be5046; }
+
+        /* Footer / Creator Branding */
+        footer {
+            margin-top: 40px;
+            border-top: 1px solid #3e4451;
+            padding-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #5c6370;
+        }
+        footer span {
+            color: #abb2bf;
+        }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h2>Konto erstellen</h2>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <div class="flash">{{ messages[0] }}</div>
-            {% endif %}
-        {% endwith %}
-        <form method="POST">
-            <label>Benutzername:</label>
-            <input type="text" name="username" required placeholder="z.B. Alex123">
 
-            <label>E-Mail-Adresse oder Telefonnummer:</label>
-            <input type="text" name="contact" required placeholder="name@email.de oder 0176...">
+    <div class="main-content">
+        <!-- Header -->
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>Pixelcraft Solutions</h1>
+            <div>
+                <span>Angemeldet als: <b>{{ username }}</b></span> | 
+                <a href="{{ url_for('logout') }}" style="color:#e06c75; text-decoration:none; font-weight:bold;">Abmelden</a>
+            </div>
+        </div>
 
-            <label>Passwort:</label>
-            <input type="password" name="password" required placeholder="Passwort wählen">
-
-            <label>📜 Regelwerk & Nutzungsbedingungen:</label>
-            <div class="rules-box">
-                <b>1. Hausrecht des Server-Teams:</b> Das Betreiber-Team besitzt das uneingeschränkte Hausrecht und kann Accounts bei Verstößen ohne Vorwarnung sperren oder Inhalte löschen.<br><br>
-                <b>2. Geltung des Strafgesetzbuches (StGB):</b> Deutsches Recht gilt uneingeschränkt. Folgende Verstöße werden zur Anzeige gebracht:<br>
-                • <b>§ 86a StGB:</b> Verwendung von Kennzeichen verfassungswidriger Organisationen (z.B. Nazi-Symbole, Hakenkreuze).<br>
-                • <b>§ 130 StGB:</b> Volksverhetzung und rassistische/diskriminierende Hetze.<br>
-                • <b>§ 241 / § 240 StGB:</b> Bedrohung und Nötigung.<br>
-                • <b>Schwere Straftaten:</b> Androhung oder Beichte von Gewalttaten, Amokläufen oder Missbrauch.<br><br>
-                <b>3. Datenschutz (DSGVO):</b> Daten (Benutzername, Kontakt, Passwörter) werden zweckgebunden gespeichert. Im Falle akuter Notfälle oder Straftaten werden Logs zur Gefahrenabwehr an Behörden übergeben.
+        <div class="container">
+            <!-- 📝 Notizen -->
+            <div class="card">
+                <h3>📝 Meine Notizen</h3>
+                <div class="list-box">
+                    {% for notiz in notizen %}
+                        <div class="item">
+                            <span>{{ notiz }}</span>
+                            <form method="POST" style="margin:0;">
+                                <input type="hidden" name="action" value="del_notiz">
+                                <input type="hidden" name="index" value="{{ loop.index0 }}">
+                                <button type="submit" class="btn-delete">X</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add_notiz">
+                    <input type="text" name="notiz" placeholder="Neue Notiz..." required>
+                    <button type="submit">Speichern</button>
+                </form>
             </div>
 
-            <div style="margin-bottom: 15px;">
-                <input type="checkbox" name="rules_accepted" id="rules" required>
-                <label for="rules" style="font-size: 0.9rem;">Ich akzeptiere das Regelwerk, das Hausrecht und die DSGVO.</label>
+            <!-- 🛒 Einkaufsliste -->
+            <div class="card">
+                <h3>🛒 Einkaufsliste</h3>
+                <div class="list-box">
+                    {% for item in einkauf_liste %}
+                        <div class="item">
+                            <span>🛍️ {{ item }}</span>
+                            <form method="POST" style="margin:0;">
+                                <input type="hidden" name="action" value="del_einkauf">
+                                <input type="hidden" name="index" value="{{ loop.index0 }}">
+                                <button type="submit" class="btn-delete">X</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add_einkauf">
+                    <input type="text" name="einkauf_item" placeholder="Artikel..." required>
+                    <input type="number" name="einkauf_menge" value="1" min="1" required style="width:60px;">
+                    <button type="submit">+</button>
+                </form>
             </div>
 
-            <button type="submit">Jetzt Registrieren</button>
-        </form>
-        <p style="text-align: center; font-size: 0.9rem; margin-top: 15px;">
-            Bereits ein Konto? <a href="{{ url_for('login') }}">Hier anmelden</a>
-        </p>
+            <!-- 🤖 PCS AI-Chat & Sicherheits-KI -->
+            <div class="card">
+                <h3>🤖 PCS AI-Chat</h3>
+                <div class="list-box">
+                    {% for chat in chats %}
+                        <div class="item" style="display:block;">{{ chat }}</div>
+                    {% endfor %}
+                </div>
+                <form method="POST">
+                    <input type="hidden" name="action" value="send_chat">
+                    <input type="text" name="nachricht" placeholder="Schreib mir was..." required>
+                    <button type="submit">Senden</button>
+                </form>
+            </div>
+        </div>
     </div>
+
+    <!-- 🏷️ Creator Footer unten links -->
+    <footer>
+        <div>© 2026 <span>Pixelcraft Solutions</span> | Developed by <span>Ghost_rider272</span></div>
+        <div style="color: #61afef;">Secure Platform v2.0</div>
+    </footer>
+
 </body>
 </html>
