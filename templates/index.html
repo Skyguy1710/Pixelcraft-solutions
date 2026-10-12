@@ -96,6 +96,50 @@
         }
         .btn-delete:hover { background-color: #be5046; }
 
+        /* Modal / Pop-up Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #21252b;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            border: 1px solid #3e4451;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            position: relative;
+            line-height: 1.6;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #e06c75;
+            cursor: pointer;
+        }
+        .close-btn:hover { color: #ff5555; }
+        .team-role {
+            background: #181a1f;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            border-left: 4px solid #61afef;
+        }
+
         /* Footer / Creator Branding */
         footer {
             margin-top: 40px;
@@ -117,7 +161,10 @@
     <div class="main-content">
         <!-- Header -->
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <h1>Pixelcraft Solutions</h1>
+            <div>
+                <h1>Pixelcraft Solutions</h1>
+                <button onclick="openModal()" style="margin-top: 10px; background-color: #282c34; color: #61afef; border: 1px solid #61afef; padding: 6px 12px; font-size: 0.85rem;">ℹ️ Über Pixelcraft Solutions & Team</button>
+            </div>
             <div>
                 <span>Angemeldet als: <b>{{ username }}</b></span>
                 {% if is_admin %}
@@ -244,6 +291,46 @@
             </div>
         </div>
     </div>
+
+    <!-- ℹ️ Über uns Modal / Pop-up -->
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 style="color: #61afef; margin-top: 0;">🚀 Über Pixelcraft Solutions</h2>
+            <p><b>Pixelcraft Solutions</b> ist eine professionelle, sichere und datenschutzkonforme Social-Productivity-Plattform, gegründet im Jahr 2026. Entwickelt, um moderne Arbeits- und Lernwerkzeuge mit höchsten Sicherheitsstandards (DSGVO & StGB-Überwachung) zu verbinden.</p>
+            
+            <h3 style="margin-top: 20px; border-bottom: 1px solid #3e4451; padding-bottom: 5px;">👥 Executive Leadership & Team</h3>
+            
+            <div class="team-role">
+                <b>SkyGuy</b><br>
+                <span style="color: #61afef; font-size: 0.9rem;">CTO & Director of Development / Technical (inkl. Lead Developer) & Deputy Project Lead</span>
+            </div>
+
+            <div class="team-role">
+                <b>Paul</b><br>
+                <span style="color: #61afef; font-size: 0.9rem;">COO & Deputy Project Lead & Operations / Community Director</span>
+            </div>
+
+            <div style="margin-top: 25px; text-align: right;">
+                <button onclick="closeModal()" style="background-color: #61afef; color: #1a1c23;">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal() {
+            document.getElementById('infoModal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+        window.onclick = function(event) {
+            let modal = document.getElementById('infoModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
 
     <!-- 🏷️ Creator Footer -->
     <footer>
