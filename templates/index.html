@@ -18,7 +18,7 @@
         }
         .container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 20px;
         }
         .card {
@@ -28,7 +28,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             display: flex;
             flex-direction: column;
-            height: 450px;
+            height: 480px;
         }
         h3 {
             margin-top: 0;
@@ -51,14 +51,16 @@
             padding: 8px 12px;
             margin-bottom: 8px;
             border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             word-break: break-word;
         }
         form {
             display: flex;
             gap: 8px;
         }
-        input[type="text"] {
-            flex-grow: 1;
+        input[type="text"], input[type="number"] {
             padding: 10px;
             border-radius: 6px;
             border: 1px solid #3e4451;
@@ -66,9 +68,9 @@
             color: #fff;
             outline: none;
         }
-        input[type="text"]:focus {
-            border-color: #61afef;
-        }
+        input[type="text"] { flex-grow: 1; }
+        input[type="number"] { width: 60px; }
+        
         button {
             padding: 10px 15px;
             background-color: #61afef;
@@ -79,21 +81,20 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        button:hover {
-            background-color: #498cd6;
+        button:hover { background-color: #498cd6; }
+        .btn-delete {
+            background-color: #e06c75;
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
         }
-        .timer-display {
-            font-size: 2rem;
-            text-align: center;
-            margin: 20px 0;
-            color: #98c379;
-            font-weight: bold;
+        .btn-delete:hover { background-color: #be5046; }
+        .lexikon-btn {
+            background-color: #98c379;
+            margin-bottom: 5px;
+            width: 100%;
         }
-        .timer-btns {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
+        .lexikon-btn:hover { background-color: #7d9e61; }
     </style>
 </head>
 <body>
@@ -106,39 +107,56 @@
             <h3>📝 Meine Notizen</h3>
             <div class="list-box">
                 {% for notiz in notizen %}
-                    <div class="item">{{ notiz }}</div>
+                    <div class="item">
+                        <span>{{ notiz }}</span>
+                        <form method="POST" style="margin:0;">
+                            <input type="hidden" name="action" value="del_notiz">
+                            <input type="hidden" name="index" value="{{ loop.index0 }}">
+                            <button type="submit" class="btn-delete">X</button>
+                        </form>
+                    </div>
                 {% endfor %}
             </div>
             <form method="POST">
-                <input type="text" name="notiz" placeholder="Neue Notiz eintragen..." required>
+                <input type="hidden" name="action" value="add_notiz">
+                <input type="text" name="notiz" placeholder="Neue Notiz..." required>
                 <button type="submit">Speichern</button>
             </form>
         </div>
 
-        <!-- Einkaufsliste -->
+        <!-- Einkaufsliste mit Anzahl -->
         <div class="card">
             <h3>🛒 Einkaufsliste</h3>
             <div class="list-box">
                 {% for item in einkauf_liste %}
-                    <div class="item">🛍️ {{ item }}</div>
+                    <div class="item">
+                        <span>🛍️ {{ item }}</span>
+                        <form method="POST" style="margin:0;">
+                            <input type="hidden" name="action" value="del_einkauf">
+                            <input type="hidden" name="index" value="{{ loop.index0 }}">
+                            <button type="submit" class="btn-delete">X</button>
+                        </form>
+                    </div>
                 {% endfor %}
             </div>
             <form method="POST">
-                <input type="text" name="einkauf_item" placeholder="Artikel hinzufügen..." required>
-                <button type="submit">Hinzufügen</button>
+                <input type="hidden" name="action" value="add_einkauf">
+                <input type="text" name="einkauf_item" placeholder="Artikel..." required style="flex-grow:2;">
+                <input type="number" name="einkauf_menge" value="1" min="1" required>
+                <button type="submit">+</button>
             </form>
         </div>
 
-        <!-- Pomodoro Lern-Timer -->
+        <!-- Wissens-Lexikon (Mathe & Deutsch) -->
         <div class="card">
-            <h3>⏱️ Pomodoro Lern-Timer</h3>
-            <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                <p style="color: #9da5b4; margin: 0;">Fokus-Zeit (25 Min)</p>
-                <div class="timer-display" id="timer">25:00</div>
-                <div class="timer-btns">
-                    <button type="button" onclick="startTimer()">Start</button>
-                    <button type="button" onclick="resetTimer()" style="background-color: #e06c75; color: #fff;">Reset</button>
-                </div>
+            <h3>📚 Schul-Lexikon</h3>
+            <div class="list-box" id="lexikon-content" style="font-size: 14px; line-height: 1.5;">
+                Wähle ein Fach aus, um wichtige Formeln oder Grammatikregeln sofort einzusehen!
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 5px;">
+                <button type="button" class="lexikon-btn" onclick="showMathe()">🧮 Mathe öffnen</button>
+                <button type="button" class="lexikon-btn" onclick="showDeutsch()">📖 Deutsch öffnen</button>
+                <button type="button" onclick="showHome()" style="background-color: #4b5263; color: white;">🏠 Zurück</button>
             </div>
         </div>
 
@@ -147,45 +165,38 @@
             <h3>🤖 PCS AI-Chat</h3>
             <div class="list-box">
                 {% for chat in chats %}
-                    <div class="item">{{ chat }}</div>
+                    <div class="item" style="display:block;">{{ chat }}</div>
                 {% endfor %}
             </div>
             <form method="POST">
-                <input type="text" name="nachricht" placeholder="Frag mich was oder schreib 'zusammenfassen'..." required>
+                <input type="hidden" name="action" value="send_chat">
+                <input type="text" name="nachricht" placeholder="Frag mich was (z.B. 5+5)..." required>
                 <button type="submit">Senden</button>
             </form>
         </div>
     </div>
 
     <script>
-        let timerInterval;
-        let timeLeft = 25 * 60;
-
-        function updateTimerDisplay() {
-            let minutes = Math.floor(timeLeft / 60);
-            let seconds = timeLeft % 60;
-            document.getElementById('timer').innerText = 
-                String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+        function showMathe() {
+            document.getElementById('lexikon-content').innerHTML = `
+                <b>🧮 Mathe-Formelsammlung:</b><br>
+                • <b>Fläche Rechteck:</b> $A = a \cdot b$<br>
+                • <b>Umfang Rechteck:</b> $U = 2 \cdot (a + b)$<br>
+                • <b>Pythagoras:</b> $a^2 + b^2 = c^2$<br>
+                • <b>Prozentrechnung:</b> $P = \frac{G \cdot p}{100}$
+            `;
         }
-
-        function startTimer() {
-            if (timerInterval) return;
-            timerInterval = setInterval(() => {
-                if (timeLeft > 0) {
-                    timeLeft--;
-                    updateTimerDisplay();
-                } else {
-                    clearInterval(timerInterval);
-                    alert('Pomodoro-Zeit vorbei! Mach eine kurze Pause. 🎉');
-                }
-            }, 1000);
+        function showDeutsch() {
+            document.getElementById('lexikon-content').innerHTML = `
+                <b>📖 Deutsch-Grammatik:</b><br>
+                • <b>Subjekt:</b> Wer oder was? (Nominativ)<br>
+                • <b>Prädikat:</b> Was tut das Subjekt? (Tätigkeitswort)<br>
+                • <b>Objekte:</b> Genitiv, Dativ (Wem?), Akkusativ (Wen/Was?)<br>
+                • <b>Umstellprobe:</b> Satzglieder lassen sich verschieben.
+            `;
         }
-
-        function resetTimer() {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            timeLeft = 25 * 60;
-            updateTimerDisplay();
+        function showHome() {
+            document.getElementById('lexikon-content').innerHTML = 'Wähle ein Fach aus, um wichtige Formeln oder Grammatikregeln sofort einzusehen!';
         }
     </script>
 
