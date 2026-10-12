@@ -15,12 +15,18 @@ import requests
 app = Flask(__name__)
 app.secret_key = 'Pixelcraft_Solution_Secret_2026_Key!'
 
-# Discord Webhook URL für euren Channel (1397866900268257353)
+# Discord Webhook URL für euren Channel
 DISCORD_WEBHOOK_URL = 'DEIN_DISCORD_WEBHOOK_LINK_HIER'
 
 
-def init_db():
+def get_db_connection():
   conn = sqlite3.connect('users.db')
+  conn.row_factory = sqlite3.Row
+  return conn
+
+
+def init_db():
+  conn = get_db_connection()
   c = conn.cursor()
   c.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -34,7 +40,10 @@ def init_db():
   conn.close()
 
 
-init_db()
+try:
+  init_db()
+except Exception as e:
+  print('DB Init Exception:', e)
 
 
 def hash_password(password):
@@ -140,16 +149,16 @@ def generate_ai_response(user_message, username, contact):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
   if request.method == 'POST':
-    username = request.form.get('username').strip()
-    contact = request.form.get('contact').strip()
-    password = request.form.get('password')
+    username = request.form.get('username', '').strip()
+    contact = request.form.get('contact', '').strip()
+    password = request.form.get('password', '')
     rules_accepted = request.form.get('rules_accepted')
 
     if not rules_accepted:
       flash('Du musst das Regelwerk und die DSGVO akzeptieren!')
       return redirect(url_for('register'))
 
-    conn = sqlite3.connect('users.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('SELECT id FROM users WHERE username = ?', (username,))
     if c.fetchone():
@@ -174,10 +183,10 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
   if request.method == 'POST':
-    username = request.form.get('username').strip()
-    password = request.form.get('password')
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '')
 
-    conn = sqlite3.connect('users.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute(
         'SELECT id, contact, password FROM users WHERE username = ?', (username,)
@@ -185,9 +194,9 @@ def login():
     user = c.fetchone()
     conn.close()
 
-    if user and user[2] == hash_password(password):
+    if user and user['password'] == hash_password(password):
       session['username'] = username
-      session['contact'] = user[1]
+      session['contact'] = user['contact']
       return redirect(url_for('index'))
     else:
       flash('Ungültige Anmeldedaten!')
@@ -207,7 +216,7 @@ def index():
     return redirect(url_for('login'))
 
   username = session['username']
-  contact = session['contact']
+  contact = session.get('contact', '')
   user_file_prefix = f'{username}_'
 
   if request.method == 'POST':
@@ -219,15 +228,17 @@ def index():
         with open(f'{user_file_prefix}notizen.txt', 'a', encoding='utf-8') as f:
           f.write(notiz + '\n')
     elif action == 'del_notiz':
-      idx = int(request.form.get('index'))
-      fpath = f'{user_file_prefix}notizen.txt'
-      if os.path.exists(fpath):
-        with open(fpath, 'r', encoding='utf-8') as f:
-          lines = f.readlines()
-        if 0 <= idx < len(lines):
-          lines.pop(idx)
-          with open(fpath, 'w', encoding='utf-8') as f:
-            f.writelines(lines)
+      idx = request.form.get('index')
+      if idx is not None:
+        idx = int(idx)
+        fpath = f'{user_file_prefix}notizen.txt'
+        if os.path.exists(fpath):
+          with open(fpath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+          if 0 <= idx < len(lines):
+            lines.pop(idx)
+            with open(fpath, 'w', encoding='utf-8') as f:
+              f.writelines(lines)
     elif action == 'add_einkauf':
       item = request.form.get('einkauf_item')
       menge = request.form.get('einkauf_menge', '1')
@@ -235,15 +246,17 @@ def index():
         with open(f'{user_file_prefix}einkauf.txt', 'a', encoding='utf-8') as f:
           f.write(f'{item} (Anzahl: {menge})\n')
     elif action == 'del_einkauf':
-      idx = int(request.form.get('index'))
-      fpath = f'{user_file_prefix}einkauf.txt'
-      if os.path.exists(fpath):
-        with open(fpath, 'r', encoding='utf-8') as f:
-          lines = f.readlines()
-        if 0 <= idx < len(lines):
-          lines.pop(idx)
-          with open(fpath, 'w', encoding='utf-8') as f:
-            f.writelines(lines)
+      idx = request.form.get('index')
+      if idx is not None:
+        idx = int(idx)
+        fpath = f'{user_file_prefix}einkauf.txt'
+        if os.path.exists(fpath):
+          with open(fpath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+          if 0 <= idx < len(lines):
+            lines.pop(idx)
+            with open(fpath, 'w', encoding='utf-8') as f:
+              f.writelines(lines)
     elif action == 'send_chat':
       nachricht = request.form.get('nachricht')
       if nachricht:
@@ -271,6 +284,9 @@ def index():
       notizen=notizen,
       einkauf_liste=einkauf_liste,
       chats=chats,
+      noten_liste=[],
+      schnitt=0.0,
+      vokabeln_liste=[],
   )
 
 
