@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixelcraft Solutions - Arbeitsbereich</title>
+    <title>Pixelcraft Solutions - Dashboard</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -51,7 +51,6 @@
             border-radius: 6px;
             margin-bottom: 15px;
             border: 1px solid #3e4451;
-            white-space: pre-line;
         }
         .item {
             background: #282c34;
@@ -171,7 +170,53 @@
                 </form>
             </div>
 
-            <!-- 🤖 PCS AI-Chat & Sicherheits-KI -->
+            <!-- 📊 Notenrechner -->
+            <div class="card">
+                <h3>📊 Notenrechner (Schnitt: {{ schnitt }})</h3>
+                <div class="list-box">
+                    {% for n in noten_liste %}
+                        <div class="item">
+                            <span><b>{{ n.fach }}:</b> Note {{ n.note }}</span>
+                            <form method="POST" style="margin:0;">
+                                <input type="hidden" name="action" value="del_note">
+                                <input type="hidden" name="index" value="{{ loop.index0 }}">
+                                <button type="submit" class="btn-delete">X</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add_note">
+                    <input type="text" name="fach" placeholder="Fach..." required style="flex:2;">
+                    <input type="number" name="note" placeholder="Note (1-6)" min="1" max="6" step="0.1" required style="flex:1;">
+                    <button type="submit">+</button>
+                </form>
+            </div>
+
+            <!-- 🧠 Vokabeltrainer -->
+            <div class="card">
+                <h3>🧠 Vokabeltrainer</h3>
+                <div class="list-box">
+                    {% for vok in vokabeln_liste %}
+                        <div class="item">
+                            <span>📖 {{ vok }}</span>
+                            <form method="POST" style="margin:0;">
+                                <input type="hidden" name="action" value="del_vokabel">
+                                <input type="hidden" name="index" value="{{ loop.index0 }}">
+                                <button type="submit" class="btn-delete">X</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+                <form method="POST">
+                    <input type="hidden" name="action" value="add_vokabel">
+                    <input type="text" name="deutsch" placeholder="Deutsch..." required>
+                    <input type="text" name="fremd" placeholder="Fremdsprache..." required>
+                    <button type="submit">+</button>
+                </form>
+            </div>
+
+            <!-- 🤖 PCS AI-Chat -->
             <div class="card">
                 <h3>🤖 PCS AI-Chat</h3>
                 <div class="list-box">
@@ -185,10 +230,19 @@
                     <button type="submit">Senden</button>
                 </form>
             </div>
+
+            <!-- 🎵 Lo-Fi Music Player -->
+            <div class="card">
+                <h3>🎵 Lo-Fi Chill Player</h3>
+                <div class="list-box" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+                    <p style="color: #abb2bf; font-size: 0.9rem; margin-bottom: 15px;">Entspannt lernen & arbeiten mit Lo-Fi Beats.</p>
+                    <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/0vvXsWCC9xrXsKd4FyS8kM?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- 🏷️ Creator Footer unten links -->
+    <!-- 🏷️ Creator Footer -->
     <footer>
         <div>© 2026 <span>Pixelcraft Solutions</span> | Developed by <span>Ghost_rider272</span></div>
         <div style="color: #61afef;">Secure Platform v2.0</div>
