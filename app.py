@@ -45,12 +45,12 @@ def init_db():
     """)
   conn.commit()
 
-  # Standardmäßig machen wir 'Ghost_rider272' beim allerersten Start zum Admin, falls noch keiner da ist
+  # Standardmäßig machen wir 'SkyGuy' beim allerersten Start zum Admin
   c.execute('SELECT COUNT(*) FROM admins')
   if c.fetchone()[0] == 0:
     c.execute(
         'INSERT OR IGNORE INTO admins (username) VALUES (?)',
-        ('Ghost_rider272',),
+        ('SkyGuy',),
     )
     conn.commit()
 
