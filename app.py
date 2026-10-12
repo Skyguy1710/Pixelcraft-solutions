@@ -6,7 +6,7 @@ app.secret_key = 'Pixelcraft Solution1710'
 
 
 def check_files():
-  for filename in ['notizen.txt', 'chats.txt']:
+  for filename in ['notizen.txt', 'chats.txt', 'einkauf.txt']:
     if not os.path.exists(filename):
       with open(filename, 'w', encoding='utf-8') as f:
         f.write('')
@@ -18,30 +18,56 @@ check_files()
 def generate_ai_response(user_message):
   msg_lower = user_message.lower()
 
-  # Erinnerungs-Logik
-  if 'erinnerung' in msg_lower or 'erinnere' in msg_lower:
+  # Zusammenfassungs- & Schul-Helfer
+  if 'zusammenfassen' in msg_lower or 'zusammenfassung' in msg_lower:
     return (
-        f'Erinnerung erfolgreich gespeichert! Ich werde dich erinnern:'
-        f' "{user_message}" 🤖'
+        '📚 **Lern-Zusammenfassung:** Hier sind die wichtigsten Punkte kurz'
+        ' für deine Klausur auf den Punkt gebracht:\n1. Konzentriere dich auf'
+        ' das Wesentliche.\n2. Nutze Schlüsselbegriffe.\n3. Mach regelmäßige'
+        ' Pausen! Du packst das! 🚀'
     )
 
-  # Wissen / Fragen beantworten (z.B. Satzglieder)
-  elif 'satzglieder' in msg_lower:
+  elif 'formel' in msg_lower or 'grammatik' in msg_lower:
     return (
-        'Satzglieder sind die Bausteine eines Satzes (z.B. Subjekt, Prädikat,'
-        ' Objekt). Sie lassen sich im Satz verschieben (Umstellprobe).'
+        '💡 **Wissens-Schatzkiste:** Wenn du eine spezifische Matheformel oder'
+        ' eine Grammatikregel (z.B. Subjekt, Prädikat, Objekt) brauchst,'
+        ' schreib mir einfach das Thema und ich erkläre es dir kinderleicht!'
     )
 
-  elif 'hallo' in msg_lower or 'hi' in msg_lower:
+  # Einkaufs-Logik im Chat
+  elif 'einkauf' in msg_lower or 'kaufen' in msg_lower:
     return (
-        'Hallo! Ich bin deine Pixelcraft AI. Wie kann ich dir heute helfen?'
+        'Schreib es am besten direkt in die Einkaufsliste, damit du es im'
+        ' Supermarkt parat hast! 🛒'
+    )
+
+  # Sympathische Begrüßungen & Smalltalk
+  elif any(
+      w in msg_lower
+      for w in ['hallo', 'hi', 'hey', 'moin', 'guten tag', 'servus']
+  ):
+    return (
+        'Hey! 😊 Schön, dass du da bist. Was lernen wir heute oder was steht'
+        ' bei dir an?'
+    )
+
+  elif 'wie geht es dir' in msg_lower or 'wie gehts' in msg_lower:
+    return (
+        'Mir geht es ausgezeichnet! Bereit, dir den Lerntag zu erleichtern. 🚀'
+        ' Und bei dir alles fit?'
+    )
+
+  elif 'wer bist du' in msg_lower or 'was kannst du' in msg_lower:
+    return (
+        'Ich bin dein smarter KI-Assistent von Pixelcraft Solutions! Ich helfe'
+        ' dir bei Notizen, fasse Texte für die Schule zusammen und quatsche'
+        ' auch gerne mit dir.'
     )
 
   else:
     return (
-        f'Das habe ich verstanden: "{user_message}". Als KI-Assistent von'
-        ' Pixelcraft Solutions stehe ich dir bei Notizen und Organisation zur'
-        ' Seite!'
+        f'Das ist ein spannender Punkt: "{user_message}". Erzähl mir gerne'
+        ' mehr oder frag mich, wenn du eine Zusammenfassung brauchst!'
     )
 
 
@@ -53,13 +79,16 @@ def index():
       if notiz:
         with open('notizen.txt', 'a', encoding='utf-8') as f:
           f.write(notiz + '\n')
+    elif 'einkauf_item' in request.form:
+      einkauf = request.form.get('einkauf_item')
+      if einkauf:
+        with open('einkauf.txt', 'a', encoding='utf-8') as f:
+          f.write(einkauf + '\n')
     elif 'nachricht' in request.form:
       nachricht = request.form.get('nachricht')
       if nachricht:
-        # Benutzer-Nachricht speichern
         with open('chats.txt', 'a', encoding='utf-8') as f:
           f.write(f'Du: {nachricht}\n')
-        # KI-Antwort generieren und speichern
         ai_reply = generate_ai_response(nachricht)
         with open('chats.txt', 'a', encoding='utf-8') as f:
           f.write(f'KI: {ai_reply}\n')
@@ -71,12 +100,22 @@ def index():
     with open('notizen.txt', 'r', encoding='utf-8') as f:
       notizen = [line.strip() for line in f.readlines()]
 
+  einkauf_liste = []
+  if os.path.exists('einkauf.txt'):
+    with open('einkauf.txt', 'r', encoding='utf-8') as f:
+      einkauf_liste = [line.strip() for line in f.readlines()]
+
   chats = []
   if os.path.exists('chats.txt'):
     with open('chats.txt', 'r', encoding='utf-8') as f:
       chats = [line.strip() for line in f.readlines()]
 
-  return render_template('index.html', notizen=notizen, chats=chats)
+  return render_template(
+      'index.html',
+      notizen=notizen,
+      einkauf_liste=einkauf_liste,
+      chats=chats,
+  )
 
 
 if __name__ == '__main__':
