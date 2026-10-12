@@ -114,7 +114,7 @@
             padding: 30px;
             border-radius: 8px;
             width: 90%;
-            max-width: 600px;
+            max-width: 650px;
             border: 1px solid #3e4451;
             box-shadow: 0 5px 20px rgba(0,0,0,0.5);
             position: relative;
@@ -138,6 +138,15 @@
             border-radius: 6px;
             margin-top: 10px;
             border-left: 4px solid #61afef;
+        }
+        .rules-section {
+            background: #181a1f;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border: 1px solid #3e4451;
+            font-size: 0.88rem;
+            color: #abb2bf;
         }
 
         /* Footer / Creator Branding */
@@ -163,7 +172,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center;">
             <div>
                 <h1>Pixelcraft Solutions</h1>
-                <button onclick="openModal()" style="margin-top: 10px; background-color: #282c34; color: #61afef; border: 1px solid #61afef; padding: 6px 12px; font-size: 0.85rem;">ℹ️ Über Pixelcraft Solutions & Team</button>
+                <button onclick="openModal()" style="margin-top: 10px; background-color: #282c34; color: #61afef; border: 1px solid #61afef; padding: 6px 12px; font-size: 0.85rem;">ℹ️ Über uns & Regelwerk</button>
             </div>
             <div>
                 <span>Angemeldet als: <b>{{ username }}</b></span>
@@ -292,7 +301,7 @@
         </div>
     </div>
 
-    <!-- ℹ️ Über uns Modal / Pop-up -->
+    <!-- ℹ️ Über uns & Regelwerk Modal -->
     <div id="infoModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal()">&times;</span>
@@ -302,6 +311,11 @@
             <h3 style="margin-top: 20px; border-bottom: 1px solid #3e4451; padding-bottom: 5px;">👥 Executive Leadership & Team</h3>
             
             <div class="team-role">
+                <b>Ghost_rider272</b><br>
+                <span style="color: #61afef; font-size: 0.9rem;">CEO & Project Lead</span>
+            </div>
+
+            <div class="team-role">
                 <b>SkyGuy</b><br>
                 <span style="color: #61afef; font-size: 0.9rem;">CTO & Director of Development / Technical (inkl. Lead Developer) & Deputy Project Lead</span>
             </div>
@@ -309,6 +323,17 @@
             <div class="team-role">
                 <b>Paul</b><br>
                 <span style="color: #61afef; font-size: 0.9rem;">COO & Deputy Project Lead & Operations / Community Director</span>
+            </div>
+
+            <h3 style="margin-top: 25px; border-bottom: 1px solid #3e4451; padding-bottom: 5px;">📜 Nutzungsbedingungen, StGB & DSGVO</h3>
+            <div class="rules-section">
+                <b>1. Hausrecht:</b> Das Betreiber-Team hat uneingeschränktes Hausrecht und kann Konten bei Verstößen sperren.<br><br>
+                <b>2. Strafrechtliche Bestimmungen (StGB):</b> Verstöße werden umgehend zur Anzeige gebracht:<br>
+                • <b>§ 86a StGB:</b> Verwendung verfassungswidriger Kennzeichen.<br>
+                • <b>§ 130 StGB:</b> Volksverhetzung und rassistische Hetze.<br>
+                • <b>§ 241 / § 240 StGB:</b> Bedrohung & Nötigung.<br>
+                • <b>Schwere Straftaten:</b> Doxxing, Cyber-Stalking und Androhung von Gewalt.<br><br>
+                <b>3. Datenschutz (DSGVO):</b> Es werden nur notwendige Kontodaten gespeichert. Bei akuter Notlage oder schweren Straftaten werden Sicherheits-Logs an die zuständigen Behörden weitergeleitet.
             </div>
 
             <div style="margin-top: 25px; text-align: right;">
