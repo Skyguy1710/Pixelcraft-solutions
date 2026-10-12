@@ -60,7 +60,7 @@
             display: flex;
             gap: 8px;
         }
-        input[type="text"], input[type="number"], select {
+        input[type="text"], input[type="number"], input[type="date"], select {
             padding: 10px;
             border-radius: 6px;
             border: 1px solid #3e4451;
@@ -68,7 +68,7 @@
             color: #fff;
             outline: none;
         }
-        input[type="text"] { flex-grow: 1; }
+        input[type="text"], input[type="date"] { flex-grow: 1; }
         
         button {
             padding: 10px 15px;
@@ -98,7 +98,6 @@
             margin-right: 5px;
         }
 
-        /* Flashcard Styling */
         .flashcard {
             background: #282c34;
             border: 2px solid #61afef;
@@ -122,7 +121,7 @@
     <h1>Pixelcraft Solutions - Arbeitsbereich</h1>
 
     <div class="container">
-        <!-- 📝 Notizen (Mit Quick-Share) -->
+        <!-- 📝 Notizen -->
         <div class="card">
             <h3>📝 Meine Notizen</h3>
             <div class="list-box">
@@ -147,7 +146,28 @@
             </form>
         </div>
 
-        <!-- 📊 Noten- & Schnitt-Rechner -->
+        <!-- ❤️ Beziehungs-Jubiläums-Rechner -->
+        <div class="card">
+            <h3>❤️ Beziehungs-Rechner</h3>
+            <div class="list-box" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+                <p style="color:#abb2bf; margin-bottom: 5px;">Wähle euren Jahrestag / Startdatum:</p>
+                <input type="date" id="rel-date" onchange="calcLove()" style="margin-bottom: 15px; width: 80%;">
+                <div id="rel-result" style="font-size: 1.1rem; color: #e06c75; font-weight: bold;">
+                    Trage euer Datum ein ❤️
+                </div>
+            </div>
+        </div>
+
+        <!-- 🎵 Lo-Fi Fokus-Musik Player -->
+        <div class="card">
+            <h3>🎵 Lo-Fi Chill Beats</h3>
+            <div class="list-box" style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+                <p style="color:#abb2bf; margin-bottom:15px;">Entspannte Hintergrundmusik zum Lernen & Chillen 🎧</p>
+                <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/0vvXsWCC9xrXsKd4FyS8kM?utm_source=generator&theme=0" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+            </div>
+        </div>
+
+        <!-- 📊 Notenrechner -->
         <div class="card">
             <h3>📊 Notenrechner (Schnitt: <span style="color:#61afef;">{{ schnitt }}</span>)</h3>
             <div class="list-box">
@@ -170,7 +190,7 @@
             </form>
         </div>
 
-        <!-- 🃏 Vokabel-Trainer (Flashcards) -->
+        <!-- 🃏 Vokabel-Trainer -->
         <div class="card">
             <h3>🃏 Vokabel-Trainer</h3>
             {% if vokabeln_liste %}
@@ -179,39 +199,12 @@
                     <button type="button" onclick="nextCard()" style="flex-grow:1;">Nächste Karte ➔</button>
                 </div>
             {% else %}
-                <div class="list-box" style="display:flex; align-items:center; justify-content:center;">Trage unten deine ersten Vokabeln ein!</div>
+                <div class="list-box" style="display:flex; align-items:center; justify-content:center;">Trage unten deine Vokabeln ein!</div>
             {% endif %}
-            
             <form method="POST">
                 <input type="hidden" name="action" value="add_vokabel">
-                <input type="text" name="wort" placeholder="Wort (z.B. Apple)" required>
-                <input type="text" name="uebersetzung" placeholder="Übersetzung (Apfel)" required>
-                <button type="submit">+</button>
-            </form>
-        </div>
-
-        <!-- 🛒 Einkaufsliste -->
-        <div class="card">
-            <h3>🛒 Einkaufsliste</h3>
-            <div class="list-box">
-                {% for item in einkauf_liste %}
-                    <div class="item">
-                        <span>🛍️ {{ item }}</span>
-                        <div>
-                            <button type="button" class="btn-share" onclick="shareItem('{{ item }}')">🔗 Share</button>
-                            <form method="POST" style="display:inline;">
-                                <input type="hidden" name="action" value="del_einkauf">
-                                <input type="hidden" name="index" value="{{ loop.index0 }}">
-                                <button type="submit" class="btn-delete">X</button>
-                            </form>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-            <form method="POST">
-                <input type="hidden" name="action" value="add_einkauf">
-                <input type="text" name="einkauf_item" placeholder="Artikel..." required>
-                <input type="number" name="einkauf_menge" value="1" min="1" required style="width:60px;">
+                <input type="text" name="wort" placeholder="Wort (Apple)" required>
+                <input type="text" name="uebersetzung" placeholder="Apfel" required>
                 <button type="submit">+</button>
             </form>
         </div>
@@ -226,20 +219,35 @@
             </div>
             <form method="POST">
                 <input type="hidden" name="action" value="send_chat">
-                <input type="text" name="nachricht" placeholder="Frag mich was (z.B. 5+5)..." required>
+                <input type="text" name="nachricht" placeholder="Frag mich was (z.B. Wurzel)..." required>
                 <button type="submit">Senden</button>
             </form>
         </div>
     </div>
 
     <script>
+        // Beziehungs-Rechner Logik
+        function calcLove() {
+            const dateInput = document.getElementById('rel-date').value;
+            if (!dateInput) return;
+            const start = new Date(dateInput);
+            const now = new Date();
+            const diffTime = Math.abs(now - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const months = Math.floor(diffDays / 30.44);
+            
+            document.getElementById('rel-result').innerHTML = `
+                ✨ Zusammen seit ${diffDays} Tagen! ✨<br>
+                <span style="font-size:0.9rem; color:#abb2bf;">(Ca. ${months} Monate pure Liebe ❤️)</span>
+            `;
+        }
+
         // Vokabel Flashcard Logik
         const cards = [
             {% for v in vokabeln_liste %}
                 { wort: "{{ v.wort }}", uebersetzung: "{{ v.uebersetzung }}" },
             {% endfor %}
         ];
-        
         let currentCardIndex = 0;
         let isShowingFront = true;
 
@@ -254,32 +262,25 @@
                 cardElement.style.borderColor = "#98c379";
             }
         }
-
         function flipCard() {
             if (cards.length === 0) return;
             isShowingFront = !isShowingFront;
             updateCardDisplay();
         }
-
         function nextCard() {
             if (cards.length === 0) return;
             currentCardIndex = (currentCardIndex + 1) % cards.length;
             isShowingFront = true;
             updateCardDisplay();
         }
-
-        if (cards.length > 0) {
-            updateCardDisplay();
-        }
+        if (cards.length > 0) { updateCardDisplay(); }
 
         // Quick-Share Funktion
         function shareItem(text) {
             const shareText = "Pixelcraft Solutions - Eintrag: " + text;
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(shareText);
-                alert("In die Zwischenablage kopiert! Du kannst es jetzt bei WhatsApp oder Discord einfügen: \n" + shareText);
-            } else {
-                alert("Teilen: " + shareText);
+                alert("In Zwischenablage kopiert! Bereit zum Teilen: \n" + shareText);
             }
         }
     </script>
