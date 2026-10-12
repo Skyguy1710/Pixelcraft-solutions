@@ -18,6 +18,9 @@ app.secret_key = 'Pixelcraft_Solution_Secret_2026_Key!'
 # Discord Webhook URL für euren Channel (1397866900268257353)
 DISCORD_WEBHOOK_URL = 'DEIN_DISCORD_WEBHOOK_LINK_HIER'
 
+# Dein Admin-Benutzername (Hier kannst du deinen Account als Admin festlegen)
+ADMIN_USERNAME = 'Ghost_rider272'
+
 
 def get_db_connection():
   conn = sqlite3.connect('users.db')
@@ -210,6 +213,25 @@ def logout():
   return redirect(url_for('login'))
 
 
+# 🛡️ Geschützte Admin-Ansicht
+@app.route('/admin-dashboard')
+def admin_dashboard():
+  if (
+      'username' not in session
+      or session['username'].lower() != ADMIN_USERNAME.lower()
+  ):
+    flash('Zugriff verwehrt! Nur für Admins.')
+    return redirect(url_for('index'))
+
+  conn = get_db_connection()
+  c = conn.cursor()
+  c.execute('SELECT id, username, contact FROM users')
+  users = c.fetchall()
+  conn.close()
+
+  return render_template('admin.html', users=users, total_users=len(users))
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
   if 'username' not in session:
@@ -222,7 +244,6 @@ def index():
   if request.method == 'POST':
     action = request.form.get('action')
 
-    # Notizen
     if action == 'add_notiz':
       notiz = request.form.get('notiz')
       if notiz:
@@ -240,8 +261,6 @@ def index():
             lines.pop(idx)
             with open(fpath, 'w', encoding='utf-8') as f:
               f.writelines(lines)
-
-    # Einkaufsliste
     elif action == 'add_einkauf':
       item = request.form.get('einkauf_item')
       menge = request.form.get('einkauf_menge', '1')
@@ -260,8 +279,6 @@ def index():
             lines.pop(idx)
             with open(fpath, 'w', encoding='utf-8') as f:
               f.writelines(lines)
-
-    # Notenrechner
     elif action == 'add_note':
       fach = request.form.get('fach')
       note = request.form.get('note')
@@ -280,8 +297,6 @@ def index():
             lines.pop(idx)
             with open(fpath, 'w', encoding='utf-8') as f:
               f.writelines(lines)
-
-    # Vokabeltrainer
     elif action == 'add_vokabel':
       de = request.form.get('deutsch')
       fr = request.form.get('fremd')
@@ -300,8 +315,6 @@ def index():
             lines.pop(idx)
             with open(fpath, 'w', encoding='utf-8') as f:
               f.writelines(lines)
-
-    # Chat
     elif action == 'send_chat':
       nachricht = request.form.get('nachricht')
       if nachricht:
@@ -324,7 +337,6 @@ def index():
   chats = read_file(f'{user_file_prefix}chats.txt')
   vokabeln_liste = read_file(f'{user_file_prefix}vokabeln.txt')
 
-  # Noten auslesen & Schnitt berechnen
   noten_roh = read_file(f'{user_file_prefix}noten.txt')
   noten_liste = []
   summe = 0
@@ -342,6 +354,7 @@ def index():
         pass
 
   schnitt = round(summe / anzahl, 2) if anzahl > 0 else 0.0
+  is_admin = username.lower() == ADMIN_USERNAME.lower()
 
   return render_template(
       'index.html',
@@ -352,6 +365,7 @@ def index():
       noten_liste=noten_liste,
       schnitt=schnitt,
       vokabeln_liste=vokabeln_liste,
+      is_admin=is_admin,
   )
 
 
