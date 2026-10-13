@@ -5,21 +5,24 @@
     <title>Pixelcraft Solutions - Admin Dashboard</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #1a1c23; color: #fff; padding: 40px; }
-        .box { background: #21252b; padding: 30px; border-radius: 8px; max-width: 900px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .box { background: #21252b; padding: 30px; border-radius: 8px; max-width: 1050px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         h2, h3 { color: #61afef; margin-top: 0; border-bottom: 2px solid #3e4451; padding-bottom: 10px; }
         .stat-box { background: #181a1f; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #3e4451; font-size: 1.1rem; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; background: #181a1f; border-radius: 6px; overflow: hidden; margin-bottom: 30px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #3e4451; font-size: 0.95rem; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #3e4451; font-size: 0.9rem; vertical-align: top; }
         th { background: #282c34; color: #61afef; }
         a { color: #61afef; text-decoration: none; font-weight: bold; }
         a:hover { text-decoration: underline; }
         .back-btn { display: inline-block; margin-top: 10px; padding: 10px 15px; background: #61afef; color: #1a1c23; border-radius: 6px; font-weight: bold; }
         .btn-action { padding: 6px 12px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        .btn-make-admin { background: #98c379; color: #1a1c23; }
-        .btn-make-admin:hover { background: #7cc357; }
-        .btn-remove-admin { background: #e06c75; color: white; }
+        .btn-save { background: #98c379; color: #1a1c23; margin-top: 5px; }
+        .btn-save:hover { background: #7cc357; }
+        .btn-hide { background: #d19a66; color: #1a1c23; margin-top: 5px; }
+        .btn-hide:hover { background: #b88250; }
+        .btn-remove-admin { background: #e06c75; color: white; margin-top: 5px; }
         .btn-remove-admin:hover { background: #be5046; }
         .flash { color: #e06c75; margin-bottom: 15px; font-weight: bold; }
+        .role-checkboxes { max-height: 140px; overflow-y: auto; background: #21252b; padding: 8px; border-radius: 4px; border: 1px solid #3e4451; margin-bottom: 5px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
@@ -36,44 +39,61 @@
             📊 Gesamtanzahl registrierter Benutzer: <b>{{ total_users }}</b>
         </div>
 
-        <h3>👥 Registrierte User & Admin-Verwaltung:</h3>
+        <h3>👥 Benutzer, Rollen & Datenschutz-Verwaltung:</h3>
         <table>
             <tr>
                 <th>ID</th>
                 <th>Benutzername</th>
-                <th>Kontakt</th>
-                <th>Status</th>
-                <th>Aktion</th>
+                <th>Kontakt / E-Mail</th>
+                <th>Rollen zuweisen (Mehrfachauswahl)</th>
+                <th>Status / Rechte</th>
             </tr>
             {% for u in users %}
             <tr>
                 <td>{{ u.id }}</td>
                 <td><b>{{ u.username }}</b></td>
-                <td>{{ u.contact }}</td>
                 <td>
-                    {% if u.username in admins %}
-                        <span style="color: #98c379; font-weight: bold;">⭐ Admin</span>
+                    {% if u.hide_contact == 1 %}
+                        <span style="color: #e06c75; font-style: italic;">🔒 [E-Mail verborgen]</span>
                     {% else %}
-                        <span style="color: #abb2bf;">User</span>
+                        {{ u.contact }}
                     {% endif %}
+                    
+                    <form method="POST" style="margin-top: 6px;">
+                        <input type="hidden" name="action" value="toggle_hide_contact">
+                        <input type="hidden" name="target_user" value="{{ u.username }}">
+                        <button type="submit" class="btn-action btn-hide">
+                            {% if u.hide_contact == 1 %}E-Mail anzeigen{% else %}🔒 E-Mail verbergen{% endif %}
+                        </button>
+                    </form>
                 </td>
                 <td>
-                    {% if u.username in admins %}
-                        {% if u.username != current_admin %}
-                        <form method="POST" style="margin:0;">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="update_roles">
+                        <input type="hidden" name="target_user" value="{{ u.username }}">
+                        <div class="role-checkboxes">
+                            {% for role in available_roles %}
+                                <label style="display: block; margin-bottom: 3px;">
+                                    <input type="checkbox" name="roles" value="{{ role }}" {% if role in u.user_roles %}checked{% endif %}> 
+                                    {{ role }}
+                                </label>
+                            {% endfor %}
+                        </div>
+                        <button type="submit" class="btn-action btn-save">Rollen speichern</button>
+                    </form>
+                </td>
+                <td>
+                    {% if u.username.lower() == 'skyguy' %}
+                        <span style="color: #61afef; font-weight: bold;">⭐ Master (SkyGuy)</span>
+                    {% elif u.username in admins %}
+                        <span style="color: #98c379; font-weight: bold;">🛡️ Admin</span>
+                        <form method="POST" style="margin-top: 8px;">
                             <input type="hidden" name="action" value="remove_admin">
                             <input type="hidden" name="target_user" value="{{ u.username }}">
                             <button type="submit" class="btn-action btn-remove-admin">Admin entziehen</button>
                         </form>
-                        {% else %}
-                            <span style="font-size:0.85rem; color:#5c6370;">(Du selbst)</span>
-                        {% endif %}
                     {% else %}
-                        <form method="POST" style="margin:0;">
-                            <input type="hidden" name="action" value="add_admin">
-                            <input type="hidden" name="target_user" value="{{ u.username }}">
-                            <button type="submit" class="btn-action btn-make-admin">Zum Admin machen</button>
-                        </form>
+                        <span style="color: #abb2bf;">Standard / Rollen-Admin</span>
                     {% endif %}
                 </td>
             </tr>
