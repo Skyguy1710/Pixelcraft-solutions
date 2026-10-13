@@ -29,6 +29,7 @@ def get_db_connection():
 def init_db():
   conn = get_db_connection()
   c = conn.cursor()
+  # User-Tabelle erstellen falls nicht vorhanden
   c.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,6 +40,18 @@ def init_db():
             hide_contact INTEGER DEFAULT 0
         )
     """)
+
+  # Falls die Tabelle schon älter war und Spalten fehlen, fügen wir sie sicherheitshalber hinzu
+  try:
+    c.execute('ALTER TABLE users ADD COLUMN roles TEXT DEFAULT ""')
+  except Exception:
+    pass
+  try:
+    c.execute('ALTER TABLE users ADD COLUMN hide_contact INTEGER DEFAULT 0')
+  except Exception:
+    pass
+
+  # Admin-Tabelle
   c.execute("""
         CREATE TABLE IF NOT EXISTS admins (
             username TEXT UNIQUE NOT NULL
@@ -171,7 +184,6 @@ def generate_ai_response(user_message, username, contact):
           ' dich an das Regelwerk bezüglich Witzen über Straftaten!'
       )
 
-  # 🧠 Erweiterte KI-Fähigkeiten (Grammatik, Deutsch, Bestimmungen, Logik, Coding)
   if 'adverbial' in msg or 'bestimmung' in msg or 'zeit' in msg:
     return (
         '📖 **Adverbiale Bestimmung (Adverbialangabe):**\nDas ist ein'
