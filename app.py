@@ -1,6 +1,7 @@
 import hashlib
 import os
 import sqlite3
+from datetime import timedelta
 from flask import (
     Flask,
     flash,
@@ -14,6 +15,9 @@ import requests
 
 app = Flask(__name__)
 app.secret_key = 'Pixelcraft_Solution_Secret_2026_Key!'
+
+# Session permanent machen, damit man eingeloggt bleibt (z. B. 30 Tage gültig)
+app.permanent_session_lifetime = timedelta(days=30)
 
 # Discord Webhook URL für euren Channel (1397866900268257353)
 DISCORD_WEBHOOK_URL = 'DEIN_DISCORD_WEBHOOK_LINK_HIER'
@@ -45,7 +49,7 @@ def init_db():
     """)
   conn.commit()
 
-  # Standardmäßig machen wir 'SkyGuy' beim allerersten Start zum Admin
+  # Standardmäßig 'SkyGuy' beim Start zum Admin machen
   c.execute('SELECT COUNT(*) FROM admins')
   if c.fetchone()[0] == 0:
     c.execute(
@@ -202,7 +206,10 @@ def register():
     conn.commit()
     conn.close()
 
-    flash('Registrierung erfolgreich! Bitte melde dich an.')
+    flash(
+        'Registrierung erfolgreich! Du kannst dich jetzt mit deinen Daten'
+        ' anmelden.'
+    )
     return redirect(url_for('login'))
 
   return render_template('register.html')
@@ -223,11 +230,14 @@ def login():
     conn.close()
 
     if user and user['password'] == hash_password(password):
+      session.permanent = (
+          True  # Sorgt dafür, dass die Session dauerhaft gespeichert wird
+      )
       session['username'] = username
       session['contact'] = user['contact']
       return redirect(url_for('index'))
     else:
-      flash('Ungültige Anmeldedaten!')
+      flash('Ungültiger Benutzername oder falsches Passwort!')
 
   return render_template('login.html')
 
@@ -253,7 +263,6 @@ def admin_dashboard():
     target_user = request.form.get('target_user', '').strip()
 
     if action == 'add_admin' and target_user:
-      # Prüfen ob User existiert
       c.execute('SELECT id FROM users WHERE username = ?', (target_user,))
       if c.fetchone():
         c.execute(
@@ -265,7 +274,6 @@ def admin_dashboard():
         flash(f'Benutzer "{target_user}" existiert nicht!')
 
     elif action == 'remove_admin' and target_user:
-      # Verhindern dass man sich selbst entfernt (Sicherheit)
       if target_user.lower() == session['username'].lower():
         flash('Du kannst dich nicht selbst als Admin entfernen!')
       else:
@@ -275,11 +283,9 @@ def admin_dashboard():
 
     return redirect(url_for('admin_dashboard'))
 
-  # Alle Nutzer laden
   c.execute('SELECT id, username, contact FROM users')
   users = c.fetchall()
 
-  # Alle Admins laden
   c.execute('SELECT username FROM admins')
   admins = [row['username'] for row in c.fetchall()]
 
