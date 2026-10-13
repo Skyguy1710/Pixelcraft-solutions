@@ -15,11 +15,8 @@ import requests
 
 app = Flask(__name__)
 app.secret_key = 'Pixelcraft_Solution_Secret_2026_Key!'
-
-# Session permanent machen, damit man eingeloggt bleibt (z. B. 30 Tage gültig)
 app.permanent_session_lifetime = timedelta(days=30)
 
-# Discord Webhook URL für euren Channel (1397866900268257353)
 DISCORD_WEBHOOK_URL = 'DEIN_DISCORD_WEBHOOK_LINK_HIER'
 
 
@@ -32,16 +29,18 @@ def get_db_connection():
 def init_db():
   conn = get_db_connection()
   c = conn.cursor()
-  # User-Tabelle
+  # User-Tabelle mit Spalte für E-Mail-Verbergung
   c.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             contact TEXT NOT NULL,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            roles TEXT DEFAULT '',
+            hide_contact INTEGER DEFAULT 0
         )
     """)
-  # Admin-Tabelle für dynamische Admins
+  # Admin-Tabelle für manuelle Admins
   c.execute("""
         CREATE TABLE IF NOT EXISTS admins (
             username TEXT UNIQUE NOT NULL
@@ -49,15 +48,10 @@ def init_db():
     """)
   conn.commit()
 
-  # Standardmäßig 'SkyGuy' beim Start zum Admin machen
-  c.execute('SELECT COUNT(*) FROM admins')
-  if c.fetchone()[0] == 0:
-    c.execute(
-        'INSERT OR IGNORE INTO admins (username) VALUES (?)',
-        ('SkyGuy',),
-    )
-    conn.commit()
-
+  # SkyGuy und Ghost_rider272 immer als Admin/Master absichern
+  for adm in ['SkyGuy', 'Ghost_rider272']:
+    c.execute('INSERT OR IGNORE INTO admins (username) VALUES (?)', (adm,))
+  conn.commit()
   conn.close()
 
 
@@ -71,15 +65,58 @@ def hash_password(password):
   return hashlib.sha256(password.encode()).hexdigest()
 
 
+def get_user_roles(username):
+  if not username:
+    return []
+  conn = get_db_connection()
+  c = conn.cursor()
+  c.execute('SELECT roles FROM users WHERE username = ?', (username,))
+  row = c.fetchone()
+  conn.close()
+  if row and row['roles']:
+    return [r.strip() for r in row['roles'].split(',') if r.strip()]
+  return []
+
+
 def is_admin_user(username):
   if not username:
     return False
+  if username.lower() == 'skyguy':
+    return True
+
   conn = get_db_connection()
   c = conn.cursor()
   c.execute('SELECT 1 FROM admins WHERE username = ?', (username,))
   res = c.fetchone()
   conn.close()
-  return res is not None
+  if res:
+    return True
+
+  roles = get_user_roles(username)
+  admin_roles = [
+      'CEO',
+      'CTO',
+      'COO',
+      'Director of Development & Technical',
+      'Project Lead',
+      'Deputy Project Lead',
+      'Operations / Community Director',
+      'Business Development Manager',
+      'Project Manager',
+      'Product Manager',
+      'Lead Developer',
+      'Developer',
+      'Bot Developer',
+      'Script Developer',
+      'UI/UX Designer',
+      'QA-Tester (Quality Assurance)',
+      'Cybersecurity Analyst',
+  ]
+  for r in roles:
+    if r in admin_roles:
+      return True
+
+  return False
 
 
 def send_discord_alert(username, contact, message):
@@ -106,7 +143,6 @@ def send_discord_alert(username, contact, message):
 
 def generate_ai_response(user_message, username, contact):
   msg = user_message.lower()
-
   is_joke = any(
       w in msg
       for w in ['spaß', 'spass', 'ironie', 'witz', 'lol', 'rofl', '😂', '😜']
@@ -200,8 +236,9 @@ def register():
 
     hashed_pw = hash_password(password)
     c.execute(
-        'INSERT INTO users (username, contact, password) VALUES (?, ?, ?)',
-        (username, contact, hashed_pw),
+        'INSERT INTO users (username, contact, password, roles, hide_contact)'
+        ' VALUES (?, ?, ?, ?, ?)',
+        (username, contact, hashed_pw, '', 0),
     )
     conn.commit()
     conn.close()
@@ -230,9 +267,7 @@ def login():
     conn.close()
 
     if user and user['password'] == hash_password(password):
-      session.permanent = (
-          True  # Sorgt dafür, dass die Session dauerhaft gespeichert wird
-      )
+      session.permanent = True
       session['username'] = username
       session['contact'] = user['contact']
       return redirect(url_for('index'))
@@ -248,7 +283,7 @@ def logout():
   return redirect(url_for('login'))
 
 
-# 🛡️ Admin-Dashboard & Admin-Verwaltung
+# 🛡️ Admin-Dashboard & Rollen-Verwaltung
 @app.route('/admin-dashboard', methods=['GET', 'POST'])
 def admin_dashboard():
   if 'username' not in session or not is_admin_user(session['username']):
@@ -262,7 +297,27 @@ def admin_dashboard():
     action = request.form.get('action')
     target_user = request.form.get('target_user', '').strip()
 
-    if action == 'add_admin' and target_user:
+    if action == 'update_roles':
+      selected_roles = request.form.getlist('roles')
+      roles_str = ','.join(selected_roles)
+      c.execute(
+          'UPDATE users SET roles = ? WHERE username = ?',
+          (roles_str, target_user),
+      )
+      conn.commit()
+      flash(f'Rollen für "{target_user}" erfolgreich aktualisiert!')
+
+    elif action == 'toggle_hide_contact':
+      # Status umdrehen (1 wird 0, 0 wird 1)
+      c.execute(
+          'UPDATE users SET hide_contact = CASE WHEN hide_contact = 1 THEN 0'
+          ' ELSE 1 END WHERE username = ?',
+          (target_user,),
+      )
+      conn.commit()
+      flash(f'Datenschutz-Status für E-Mail von "{target_user}" geändert.')
+
+    elif action == 'add_admin' and target_user:
       c.execute('SELECT id FROM users WHERE username = ?', (target_user,))
       if c.fetchone():
         c.execute(
@@ -274,7 +329,9 @@ def admin_dashboard():
         flash(f'Benutzer "{target_user}" existiert nicht!')
 
     elif action == 'remove_admin' and target_user:
-      if target_user.lower() == session['username'].lower():
+      if target_user.lower() == 'skyguy':
+        flash('Der Haupt-Admin SkyGuy kann nicht entfernt werden!')
+      elif target_user.lower() == session['username'].lower():
         flash('Du kannst dich nicht selbst als Admin entfernen!')
       else:
         c.execute('DELETE FROM admins WHERE username = ?', (target_user,))
@@ -283,13 +340,52 @@ def admin_dashboard():
 
     return redirect(url_for('admin_dashboard'))
 
-  c.execute('SELECT id, username, contact FROM users')
-  users = c.fetchall()
+  c.execute('SELECT id, username, contact, roles, hide_contact FROM users')
+  users_raw = c.fetchall()
+  users = []
+  for u in users_raw:
+    user_dict = dict(u)
+    user_dict['user_roles'] = [
+        r.strip() for r in u['roles'].split(',') if r.strip()
+    ]
+    users.append(user_dict)
 
   c.execute('SELECT username FROM admins')
   admins = [row['username'] for row in c.fetchall()]
 
   conn.close()
+
+  available_roles = [
+      'CEO',
+      'CTO',
+      'COO',
+      'Director of Development & Technical',
+      'Project Lead',
+      'Deputy Project Lead',
+      'Operations / Community Director',
+      'Business Development Manager',
+      'Project Manager',
+      'Product Manager',
+      'Marketing & Social Media Manager',
+      'Lead Developer',
+      'Developer',
+      'Bot Developer',
+      'Script Developer',
+      'UI/UX Designer',
+      'QA-Tester (Quality Assurance)',
+      'Cybersecurity Analyst',
+      'Head Moderator',
+      'Senior Moderator',
+      'Moderator',
+      'Jr Moderator',
+      'Head Supporter',
+      'Senior Supporter',
+      'Supporter',
+      'Community Manager',
+      'Community Sprecher',
+      'VIP',
+      'Kunden',
+  ]
 
   return render_template(
       'admin.html',
@@ -297,6 +393,7 @@ def admin_dashboard():
       admins=admins,
       total_users=len(users),
       current_admin=session['username'],
+      available_roles=available_roles,
   )
 
 
