@@ -29,7 +29,6 @@ def get_db_connection():
 def init_db():
   conn = get_db_connection()
   c = conn.cursor()
-  # User-Tabelle mit Spalte für E-Mail-Verbergung
   c.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +39,6 @@ def init_db():
             hide_contact INTEGER DEFAULT 0
         )
     """)
-  # Admin-Tabelle für manuelle Admins
   c.execute("""
         CREATE TABLE IF NOT EXISTS admins (
             username TEXT UNIQUE NOT NULL
@@ -48,7 +46,6 @@ def init_db():
     """)
   conn.commit()
 
-  # SkyGuy und Ghost_rider272 immer als Admin/Master absichern
   for adm in ['SkyGuy', 'Ghost_rider272']:
     c.execute('INSERT OR IGNORE INTO admins (username) VALUES (?)', (adm,))
   conn.commit()
@@ -174,7 +171,16 @@ def generate_ai_response(user_message, username, contact):
           ' dich an das Regelwerk bezüglich Witzen über Straftaten!'
       )
 
-  if any(
+  # 🧠 Erweiterte KI-Fähigkeiten (Grammatik, Deutsch, Bestimmungen, Logik, Coding)
+  if 'adverbial' in msg or 'bestimmung' in msg or 'zeit' in msg:
+    return (
+        '📖 **Adverbiale Bestimmung (Adverbialangabe):**\nDas ist ein'
+        ' Satzglied, das die Umstände einer Handlung näher beschreibt. Die'
+        ' **adverbiale Bestimmung der Zeit (Temporaladverbial)** fragt nach'
+        ' **Wann?**, **Wie lange?** oder **Wie oft?**.\n*Beispiel:* „*Morgen*'
+        ' fahren wir in den Urlaub.“ (Wann? -> Morgen).'
+    )
+  elif any(
       w in msg
       for w in [
           'formel',
@@ -191,26 +197,42 @@ def generate_ai_response(user_message, username, contact):
   ):
     if 'wurzel' in msg or 'quadrat' in msg:
       return (
-          '🧮 **Wurzel & Quadrat:** Quadratwurzel ($\sqrt{x}$) ist die'
-          ' Umkehrung zum Quadrieren ($x^2$). Beispiel: $\sqrt{25} = 5$.'
+          '🧮 **Wurzel & Quadrat:** Die Quadratwurzel ($\sqrt{x}$) ist die'
+          ' mathematische Umkehrung zum Quadrieren ($x^2$). Beispiel:'
+          ' $\sqrt{25} = 5$, da $5 \times 5 = 25$.'
       )
     return (
-        '🧮 **Mathe-Assistent:** Ich helfe dir bei Formeln, Prozentrechnung oder'
-        ' Gleichungen!'
+        '🧮 **Mathe-Assistent:** Ich helfe dir präzise bei Gleichungen,'
+        ' Prozentrechnung oder geometrischen Formeln!'
     )
   elif any(
       w in msg for w in ['satzglieder', 'grammatik', 'subjekt', 'prädikat', 'wort']
   ):
     return (
-        '📖 **Deutsch-Grammatik:**\n• **Subjekt:** Wer oder was?\n• **Prädikat:**'
-        ' Was tut das Subjekt?\n• **Objekte:** Wem? oder Wen/Was?'
+        '📖 **Deutsch-Grammatik:**\n• **Subjekt (Wer-Fall):** Wer oder was tut'
+        ' etwas?\n• **Prädikat (Tätigkeit):** Was tut das Subjekt?\n• **Akkusativobjekt'
+        ' (Wen-Fall):** Wen oder was?\n• **Dativobjekt (Wem-Fall):** Wem?'
+    )
+  elif any(
+      w in msg for w in ['code', 'python', 'programmieren', 'skript', 'fehler']
+  ):
+    return (
+        '🛠️ **Code & Problemlösung:** Als dein technischer KI-Assistent analysiere'
+        ' ich Code-Schnipsel, suche Logikfehler oder helfe dir beim Aufbau von'
+        ' Flask- und Python-Skripten. Welches Problem möchtest du lösen?'
     )
   elif any(w in msg for w in ['hallo', 'hi', 'hey', 'moin', 'servus']):
-    return f'Hey {username}! 😊 Schön, dass du da bist. Wie kann ich dir helfen?'
+    return (
+        f'Hey {username}! 😊 Ich bin dein intelligenter Pixelcraft Solutions'
+        ' KI-Assistent. Wie kann ich dir heute beim Lernen, Planen oder'
+        ' Programmieren helfen?'
+    )
   else:
     return (
-        f'Das ist ein interessanter Punkt ("{user_message}")! Ich bin dein'
-        ' Assistent für Notizen, Mathe und mehr. Frag mich einfach! 🤖'
+        f'Das ist ein spannender Aspekt zu "{user_message}". Als deine'
+        ' Allrounder-KI analysiere ich Zusammenhänge, helfe bei Recherchen'
+        ' oder entwickle kreative Lösungen für dich. Was genau möchtest du'
+        ' dazu wissen? 🤖✨'
     )
 
 
@@ -308,14 +330,13 @@ def admin_dashboard():
       flash(f'Rollen für "{target_user}" erfolgreich aktualisiert!')
 
     elif action == 'toggle_hide_contact':
-      # Status umdrehen (1 wird 0, 0 wird 1)
       c.execute(
           'UPDATE users SET hide_contact = CASE WHEN hide_contact = 1 THEN 0'
           ' ELSE 1 END WHERE username = ?',
           (target_user,),
       )
       conn.commit()
-      flash(f'Datenschutz-Status für E-Mail von "{target_user}" geändert.')
+      flash(f'Datenschutz-Status für "{target_user}" geändert.')
 
     elif action == 'add_admin' and target_user:
       c.execute('SELECT id FROM users WHERE username = ?', (target_user,))
